@@ -5,12 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Target } from 'lucide-react';
 
-export const FocusMode = () => {
+interface FocusModeProps {
+  onActivate?: () => void;
+}
+
+export const FocusMode: React.FC<FocusModeProps> = ({ onActivate }) => {
   const [focusStreak, setFocusStreak] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
 
   const startFocus = () => {
     setIsFocused(true);
+    onActivate?.();
     // In a real app, this would disable notifications, etc.
   };
 
