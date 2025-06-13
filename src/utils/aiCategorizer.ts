@@ -1,72 +1,98 @@
 
-export const categorizeActivity = (activityName: string): string => {
+export const categorizeActivity = (activityName: string): string[] => {
   const activity = activityName.toLowerCase();
+  const categories: string[] = [];
   
-  // Learning and Education
-  if (activity.includes('study') || activity.includes('learn') || activity.includes('course') ||
+  // Technical Education
+  if (activity.includes('codecademy') || activity.includes('coding course') || 
+      activity.includes('coding project') || activity.includes('react') || 
+      activity.includes('javascript') || activity.includes('coding') ||
+      activity.includes('robotics') || activity.includes('math') ||
+      activity.includes('arduino') || activity.includes('programming') ||
+      activity.includes('study') || activity.includes('learn') || activity.includes('course') ||
       activity.includes('read') || activity.includes('research') || activity.includes('tutorial') ||
       activity.includes('practice') || activity.includes('training') || activity.includes('skill') ||
       activity.includes('book') || activity.includes('homework') || activity.includes('exam') ||
       activity.includes('class') || activity.includes('lecture') || activity.includes('workshop')) {
-    return 'Learning and Education';
+    categories.push('Technical Education');
   }
   
-  // Physical Activity
-  if (activity.includes('exercise') || activity.includes('workout') || activity.includes('gym') ||
-      activity.includes('run') || activity.includes('walk') || activity.includes('yoga') ||
-      activity.includes('sport') || activity.includes('fitness') || activity.includes('health') ||
-      activity.includes('bike') || activity.includes('swim') || activity.includes('dance') ||
-      activity.includes('hike') || activity.includes('stretch') || activity.includes('cardio')) {
-    return 'Physical Activity';
+  // Leisure
+  if (activity.includes('cricket') && activity.includes('house') ||
+      activity.includes('chilling') || activity.includes('break') ||
+      activity.includes('rest') || activity.includes('relax') ||
+      activity.includes('entertainment') || activity.includes('game') || 
+      activity.includes('tv') || activity.includes('movie') || 
+      activity.includes('music') || activity.includes('social media') ||
+      activity.includes('leisure') || activity.includes('free time')) {
+    categories.push('Leisure');
+  }
+  
+  // Fitness
+  if (activity.includes('tennis') || activity.includes('walking') || 
+      activity.includes('table tennis') || activity.includes('cricket') ||
+      activity.includes('scooter') || activity.includes('playing with friends') ||
+      activity.includes('exercise') || activity.includes('workout') || 
+      activity.includes('gym') || activity.includes('run') || 
+      activity.includes('yoga') || activity.includes('sport') || 
+      activity.includes('fitness') || activity.includes('health') ||
+      activity.includes('bike') || activity.includes('swim') || 
+      activity.includes('dance') || activity.includes('hike') || 
+      activity.includes('stretch') || activity.includes('cardio')) {
+    categories.push('Fitness');
   }
   
   // Eating
-  if (activity.includes('eat') || activity.includes('meal') || activity.includes('breakfast') ||
-      activity.includes('lunch') || activity.includes('dinner') || activity.includes('snack') ||
-      activity.includes('cook') || activity.includes('food') || activity.includes('restaurant') ||
-      activity.includes('kitchen') || activity.includes('recipe') || activity.includes('grocery')) {
-    return 'Eating';
+  if (activity.includes('eat') || activity.includes('meal') || 
+      activity.includes('breakfast') || activity.includes('lunch') || 
+      activity.includes('dinner') || activity.includes('supper') || 
+      activity.includes('snack') || activity.includes('cook') || 
+      activity.includes('food') || activity.includes('restaurant') ||
+      activity.includes('kitchen') || activity.includes('recipe') || 
+      activity.includes('grocery')) {
+    categories.push('Eating');
   }
   
   // Time with Family
-  if (activity.includes('family') || activity.includes('parent') || activity.includes('child') ||
-      activity.includes('sibling') || activity.includes('mom') || activity.includes('dad') ||
-      activity.includes('mother') || activity.includes('father') || activity.includes('kids') ||
-      activity.includes('relatives') || activity.includes('together') || activity.includes('visit')) {
-    return 'Time with Family';
+  if (activity.includes('family') || activity.includes('parent') || 
+      activity.includes('child') || activity.includes('sibling') || 
+      activity.includes('mom') || activity.includes('dad') ||
+      activity.includes('mother') || activity.includes('father') || 
+      activity.includes('kids') || activity.includes('relatives') || 
+      activity.includes('together') || activity.includes('visit') ||
+      (activity.includes('walking') && activity.includes('family')) ||
+      (activity.includes('tennis') && activity.includes('family')) ||
+      (activity.includes('tv') && activity.includes('family')) ||
+      (activity.includes('games') && activity.includes('family'))) {
+    categories.push('Time with Family');
   }
   
-  // Break Time
-  if (activity.includes('break') || activity.includes('rest') || activity.includes('relax') ||
-      activity.includes('nap') || activity.includes('sleep') || activity.includes('chill') ||
-      activity.includes('leisure') || activity.includes('free time') || activity.includes('pause') ||
-      activity.includes('entertainment') || activity.includes('game') || activity.includes('tv') ||
-      activity.includes('movie') || activity.includes('music') || activity.includes('social media')) {
-    return 'Break Time';
+  // Default category if none match
+  if (categories.length === 0) {
+    categories.push('Other');
   }
   
-  // Default category
-  return 'Other';
+  return categories;
 };
 
 export const getCategoryColor = (category: string): string => {
   switch (category) {
-    case 'Learning and Education': return '#3B82F6'; // Blue
-    case 'Physical Activity': return '#10B981'; // Green
+    case 'Technical Education': return '#3B82F6'; // Blue
+    case 'Fitness': return '#10B981'; // Green
+    case 'Leisure': return '#8B5CF6'; // Purple
     case 'Eating': return '#F59E0B'; // Orange
     case 'Time with Family': return '#EF4444'; // Red
-    case 'Break Time': return '#8B5CF6'; // Purple
     default: return '#6B7280'; // Gray
   }
 };
 
 export const getCategoryEmoji = (category: string): string => {
   switch (category) {
-    case 'Learning and Education': return '📚';
-    case 'Physical Activity': return '💪';
+    case 'Technical Education': return '💻';
+    case 'Fitness': return '💪';
+    case 'Leisure': return '😌';
     case 'Eating': return '🍽️';
     case 'Time with Family': return '👨‍👩‍👧‍👦';
-    case 'Break Time': return '😌';
     default: return '📝';
   }
 };

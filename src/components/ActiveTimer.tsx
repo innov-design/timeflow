@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Play, Timer, RotateCcw } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Clock, Play, Pause, Plus } from 'lucide-react';
 import { Activity } from './TimeFlowDashboard';
 import { categorizeActivity } from '@/utils/aiCategorizer';
 
@@ -13,243 +14,194 @@ interface ActiveTimerProps {
   onUpdateActivity: (id: string, updates: Partial<Activity>) => void;
 }
 
-export const ActiveTimer: React.FC<ActiveTimerProps> = ({ 
-  activities, 
-  onAddActivity, 
-  onUpdateActivity 
-}) => {
-  const [currentTime, setCurrentTime] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
+export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActivity, onUpdateActivity }) => {
   const [activityName, setActivityName] = useState('');
-  const [description, setDescription] = useState('');
-  const [activeActivityId, setActiveActivityId] = useState<string | null>(null);
-
-  // Add past activity form
-  const [pastActivityName, setPastActivityName] = useState('');
-  const [pastDescription, setPastDescription] = useState('');
-  const [pastHours, setPastHours] = useState('');
-  const [pastMinutes, setPastMinutes] = useState('');
-  const [pastStartTime, setPastStartTime] = useState('');
+  const [activityDescription, setActivityDescription] = useState('');
+  const [isRunning, setIsRunning] = useState(false);
+  const [startTime, setStartTime] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [pastDuration, setPastDuration] = useState(30);
+  const [showPastActivityForm, setShowPastActivityForm] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning) {
       interval = setInterval(() => {
-        setCurrentTime(prev => prev + 1);
-      }, 1000);
+        setElapsedTime(Date.now() - startTime);
+      }, 10);
     }
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isRunning, startTime]);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleStopTimer = () => {
+    setIsRunning(false);
+    const durationInSeconds = Math.floor(elapsedTime / 1000);
+
+    const currentActivity = activities.find(activity => activity.isActive);
+    if (currentActivity) {
+      onUpdateActivity(currentActivity.id, { 
+        duration: durationInSeconds, 
+        endTime: new Date(), 
+        isActive: false 
+      });
+    }
+    setActivityName('');
+    setActivityDescription('');
+  };
+
+  const handleAddPastActivity = () => {
+    if (!activityName.trim()) return;
+    
+    const categories = categorizeActivity(activityName);
+    const primaryCategory = categories[0] || 'Other';
+    
+    const activity: Omit<Activity, 'id'> = {
+      name: activityName,
+      description: activityDescription,
+      duration: pastDuration * 60,
+      startTime: new Date(Date.now() - pastDuration * 60 * 1000),
+      endTime: new Date(),
+      category: primaryCategory,
+      isActive: false
+    };
+    
+    onAddActivity(activity);
+    setActivityName('');
+    setActivityDescription('');
+    setPastDuration(30);
+    setShowPastActivityForm(false);
   };
 
   const startTimer = () => {
     if (!activityName.trim()) return;
     
-    const newActivity: Omit<Activity, 'id'> = {
+    const categories = categorizeActivity(activityName);
+    const primaryCategory = categories[0] || 'Other';
+    
+    const activity: Omit<Activity, 'id'> = {
       name: activityName,
-      description,
+      description: activityDescription,
       duration: 0,
       startTime: new Date(),
-      category: categorizeActivity(activityName),
+      category: primaryCategory,
       isActive: true
     };
     
-    const tempId = Date.now().toString();
-    onAddActivity({ ...newActivity });
-    setActiveActivityId(tempId);
+    onAddActivity(activity);
     setIsRunning(true);
-    setCurrentTime(0);
+    setStartTime(Date.now());
+    setElapsedTime(0);
   };
 
-  const stopTimer = () => {
-    if (activeActivityId) {
-      onUpdateActivity(activeActivityId, {
-        duration: currentTime,
-        endTime: new Date(),
-        isActive: false
-      });
-    }
-    
-    setIsRunning(false);
-    setCurrentTime(0);
-    setActivityName('');
-    setDescription('');
-    setActiveActivityId(null);
-  };
-
-  const resetTimer = () => {
-    setIsRunning(false);
-    setCurrentTime(0);
-    if (activeActivityId) {
-      onUpdateActivity(activeActivityId, {
-        duration: 0,
-        isActive: false
-      });
-      setActiveActivityId(null);
-    }
-  };
-
-  const addPastActivity = () => {
-    if (!pastActivityName.trim() || !pastHours || !pastMinutes) return;
-    
-    const totalMinutes = parseInt(pastHours) * 60 + parseInt(pastMinutes);
-    const totalSeconds = totalMinutes * 60;
-    
-    let startTime = new Date();
-    if (pastStartTime) {
-      const [hours, minutes] = pastStartTime.split(':');
-      startTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-    } else {
-      startTime.setTime(startTime.getTime() - totalSeconds * 1000);
-    }
-    
-    const endTime = new Date(startTime.getTime() + totalSeconds * 1000);
-    
-    const newActivity: Omit<Activity, 'id'> = {
-      name: pastActivityName,
-      description: pastDescription,
-      duration: totalSeconds,
-      startTime,
-      endTime,
-      category: categorizeActivity(pastActivityName),
-      isActive: false
-    };
-    
-    onAddActivity(newActivity);
-    
-    // Reset form
-    setPastActivityName('');
-    setPastDescription('');
-    setPastHours('');
-    setPastMinutes('');
-    setPastStartTime('');
-  };
+  const activeActivity = activities.find(activity => activity.isActive);
 
   return (
     <Card className="glass-effect border-white/20">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
-          <Timer className="w-5 h-5" />
+          <Clock className="w-5 h-5" />
           Active Timer
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Current Timer */}
-        <div className="text-center">
-          <div className="text-6xl font-bold text-white mb-4 font-mono">
-            {formatTime(currentTime)}
-          </div>
-          <div className="flex gap-2 justify-center">
-            {!isRunning ? (
-              <Button 
-                onClick={startTimer}
-                disabled={!activityName.trim()}
-                className="bg-green-500 hover:bg-green-600 text-white border-0"
-              >
-                <Play className="w-4 h-4 mr-2" />
-                START
-              </Button>
-            ) : (
-              <Button 
-                onClick={stopTimer}
-                className="bg-red-500 hover:bg-red-600 text-white border-0"
-              >
-                STOP
-              </Button>
-            )}
+      <CardContent className="space-y-4">
+        {activeActivity ? (
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white font-mono">
+              {formatTime(elapsedTime)}
+            </div>
+            <div className="text-white/80">
+              {activeActivity.name}
+            </div>
+            <Progress value={66} />
             <Button 
-              onClick={resetTimer}
-              className="bg-gray-600 hover:bg-gray-700 text-white border-0"
+              onClick={handleStopTimer}
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              RESET
+              Stop Timer
             </Button>
           </div>
-        </div>
-
-        {/* Activity Form */}
-        <div className="space-y-4">
-          <Input
-            placeholder="Activity name"
-            value={activityName}
-            onChange={(e) => setActivityName(e.target.value)}
-            disabled={isRunning}
-            className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
-          />
-          <Textarea
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            disabled={isRunning}
-            className="bg-white/10 border-white/30 text-white placeholder:text-white/60 resize-none"
-            rows={3}
-          />
-          {!isRunning && (
+        ) : (
+          <>
+            <Input
+              type="text"
+              placeholder="Activity name"
+              value={activityName}
+              onChange={(e) => setActivityName(e.target.value)}
+              className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
+            />
+            <Textarea
+              placeholder="Activity description (optional)"
+              value={activityDescription}
+              onChange={(e) => setActivityDescription(e.target.value)}
+              className="bg-white/10 border-white/30 text-white placeholder:text-white/60 resize-none"
+              rows={3}
+            />
             <Button 
               onClick={startTimer}
               disabled={!activityName.trim()}
-              className="w-full bg-primary hover:bg-primary/90 border-0"
+              className="w-full bg-green-500 hover:bg-green-600 text-white"
             >
-              ADD CURRENT ACTIVITY
+              Start Timer
             </Button>
-          )}
-        </div>
+            <Button 
+              onClick={() => setShowPastActivityForm(true)}
+              variant="outline"
+              className="w-full border-white/30 text-white hover:bg-white/10"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Past Activity
+            </Button>
+          </>
+        )}
 
-        {/* Add Past Activity */}
-        <div className="border-t border-white/20 pt-6 space-y-4">
-          <h3 className="text-white font-semibold">Add Past Activity</h3>
-          <Input
-            placeholder="Activity name"
-            value={pastActivityName}
-            onChange={(e) => setPastActivityName(e.target.value)}
-            className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
-          />
-          <Textarea
-            placeholder="Description (optional)"
-            value={pastDescription}
-            onChange={(e) => setPastDescription(e.target.value)}
-            className="bg-white/10 border-white/30 text-white placeholder:text-white/60 resize-none"
-            rows={2}
-          />
-          <div className="grid grid-cols-3 gap-2">
+        {showPastActivityForm && (
+          <div className="space-y-4">
             <Input
-              placeholder="Hours"
+              type="text"
+              placeholder="Activity name"
+              value={activityName}
+              onChange={(e) => setActivityName(e.target.value)}
+              className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
+            />
+            <Textarea
+              placeholder="Activity description (optional)"
+              value={activityDescription}
+              onChange={(e) => setActivityDescription(e.target.value)}
+              className="bg-white/10 border-white/30 text-white placeholder:text-white/60 resize-none"
+              rows={3}
+            />
+            <Input
               type="number"
-              min="0"
-              value={pastHours}
-              onChange={(e) => setPastHours(e.target.value)}
+              placeholder="Duration (minutes)"
+              value={pastDuration.toString()}
+              onChange={(e) => setPastDuration(parseInt(e.target.value))}
               className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
             />
-            <Input
-              placeholder="Minutes"
-              type="number"
-              min="0"
-              max="59"
-              value={pastMinutes}
-              onChange={(e) => setPastMinutes(e.target.value)}
-              className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
-            />
-            <Input
-              placeholder="Start Time"
-              type="time"
-              value={pastStartTime}
-              onChange={(e) => setPastStartTime(e.target.value)}
-              className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
-            />
+            <Button 
+              onClick={handleAddPastActivity}
+              disabled={!activityName.trim()}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Add Activity
+            </Button>
+            <Button 
+              onClick={() => setShowPastActivityForm(false)}
+              variant="outline"
+              className="w-full border-white/30 text-white hover:bg-white/10"
+            >
+              Cancel
+            </Button>
           </div>
-          <Button 
-            onClick={addPastActivity}
-            disabled={!pastActivityName.trim() || !pastHours || !pastMinutes}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white border-0"
-          >
-            ADD PAST ACTIVITY
-          </Button>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

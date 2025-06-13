@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ActiveTimer } from './ActiveTimer';
 import { PomodoroTimer } from './PomodoroTimer';
 import { TodaysStats } from './TodaysStats';
-import { QuickTimer } from './QuickTimer';
+import { CustomTimer } from './CustomTimer';
 import { FocusMode } from './FocusMode';
 import { WeeklyGoal } from './WeeklyGoal';
 import { ActivitiesLog } from './ActivitiesLog';
@@ -10,15 +10,18 @@ import { CalendarView } from './CalendarView';
 import { AIInsights } from './AIInsights';
 import { TimeCalculator } from './TimeCalculator';
 import { StreakCounter } from './StreakCounter';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, BarChart3, Brain, Calculator, Target } from 'lucide-react';
+import { Calendar, Calculator, Target, TrendingUp, BarChart3, Clock, Activity } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { EnhancedCalendar } from './EnhancedCalendar';
 import { CategoryGoals } from './CategoryGoals';
 import { GamificationStats } from './GamificationStats';
 import { TodoList } from './TodoList';
+import { categorizeActivity, getCategoryColor, getCategoryEmoji } from '@/utils/aiCategorizer';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from 'recharts';
 
 export interface Activity {
   id: string;
@@ -167,6 +170,47 @@ export const TimeFlowDashboard = () => {
     goal.currentMinutes >= Math.floor(goal.weeklyMinutes / 60)
   ).length;
 
+  // Calculate insights data
+  const categoryData = activities.reduce((acc, activity) => {
+    const categories = categorizeActivity(activity.name);
+    categories.forEach(category => {
+      if (!acc[category]) {
+        acc[category] = { name: category, value: 0, activities: 0 };
+      }
+      acc[category].value += activity.duration;
+      acc[category].activities += 1;
+    });
+    return acc;
+  }, {} as Record<string, { name: string; value: number; activities: number }>);
+
+  const chartData = Object.values(categoryData).map(item => ({
+    ...item,
+    hours: Math.round(item.value / 3600 * 10) / 10
+  }));
+
+  const weeklyData = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dayActivities = activities.filter(activity => 
+      new Date(activity.startTime).toDateString() === date.toDateString()
+    );
+    const totalTime = dayActivities.reduce((sum, activity) => sum + activity.duration, 0);
+    
+    return {
+      day: date.toLocaleDateString('en', { weekday: 'short' }),
+      hours: Math.round(totalTime / 3600 * 10) / 10,
+      activities: dayActivities.length
+    };
+  }).reverse();
+
+  const productivityScore = Math.min(100, Math.round(
+    (totalTimeToday / 3600) * 10 + 
+    timerCount * 5 + 
+    pomodoroCount * 10 + 
+    focusModeCount * 15 + 
+    streak * 2
+  ));
+
   return (
     <div className="min-h-screen gradient-bg p-4">
       <div className="w-full max-w-none mx-auto space-y-6">
@@ -195,14 +239,6 @@ export const TimeFlowDashboard = () => {
                 Calendar
               </Button>
               <Button
-                variant={currentView === 'insights' ? 'default' : 'secondary'}
-                onClick={() => setCurrentView('insights')}
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-              >
-                <Brain className="w-4 h-4 mr-2" />
-                AI Insights
-              </Button>
-              <Button
                 variant={currentView === 'calculator' ? 'default' : 'secondary'}
                 onClick={() => setCurrentView('calculator')}
                 className="bg-white/20 hover:bg-white/30 text-white border-white/30"
@@ -225,26 +261,21 @@ export const TimeFlowDashboard = () => {
             <Badge variant="secondary" className="bg-white/20 text-white">
               🎯 {completedGoals} goals completed
             </Badge>
+            <Badge variant="secondary" className="bg-white/20 text-white">
+              📈 {productivityScore}% productivity score
+            </Badge>
           </div>
         </Card>
 
         {currentView === 'dashboard' && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Left Column - Main Timer */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-1 space-y-6">
               <ActiveTimer 
                 activities={activities}
                 onAddActivity={addActivity}
                 onUpdateActivity={updateActivity}
               />
-              <ActivitiesLog 
-                activities={activities}
-                onDeleteActivity={deleteActivity}
-              />
-            </div>
-
-            {/* Right Column - Stats and Tools */}
-            <div className="space-y-6">
               <GamificationStats 
                 timerCount={timerCount}
                 pomodoroCount={pomodoroCount}
@@ -253,11 +284,75 @@ export const TimeFlowDashboard = () => {
                 streak={streak}
               />
               <PomodoroTimer onComplete={incrementPomodoroCount} />
-              <TodaysStats activities={activities} />
-              <QuickTimer />
+              <CustomTimer />
             </div>
 
-            {/* Far Right Column - Goals and Todos */}
+            {/* Center Column - AI Insights & Stats */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Category Breakdown Chart */}
+              <Card className="glass-effect border-white/20">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Category Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {chartData.length > 0 ? (
+                    <ChartContainer config={{}} className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={chartData}>
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{ fill: '#fff', fontSize: 12 }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                          />
+                          <YAxis tick={{ fill: '#fff', fontSize: 12 }} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="hours" fill="#8884d8" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  ) : (
+                    <div className="text-white/60 text-center py-8">
+                      No data available yet. Start tracking activities!
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Weekly Progress */}
+              <Card className="glass-effect border-white/20">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Weekly Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={{}} className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={weeklyData}>
+                        <XAxis dataKey="day" tick={{ fill: '#fff', fontSize: 12 }} />
+                        <YAxis tick={{ fill: '#fff', fontSize: 12 }} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line type="monotone" dataKey="hours" stroke="#8884d8" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              {/* Activities Log */}
+              <ActivitiesLog 
+                activities={activities}
+                onDeleteActivity={deleteActivity}
+              />
+            </div>
+
+            {/* Right Column - Goals, Todos, Stats */}
             <div className="space-y-6">
               <CategoryGoals 
                 activities={activities}
@@ -271,8 +366,9 @@ export const TimeFlowDashboard = () => {
                 onToggleTodo={toggleTodo}
                 onDeleteTodo={deleteTodo}
               />
-              <FocusMode onActivate={incrementFocusCount} />
+              <TodaysStats activities={activities} />
               <StreakCounter streak={streak} />
+              <FocusMode onActivate={incrementFocusCount} />
             </div>
           </div>
         )}
@@ -284,13 +380,6 @@ export const TimeFlowDashboard = () => {
             onAddEvent={addCalendarEvent}
             onDeleteEvent={deleteCalendarEvent}
           />
-        )}
-
-        {currentView === 'insights' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <AIInsights activities={activities} />
-            <TimeCalculator />
-          </div>
         )}
 
         {currentView === 'calculator' && (
