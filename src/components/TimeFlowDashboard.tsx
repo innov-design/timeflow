@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ActiveTimer } from './ActiveTimer';
 import { PomodoroTimer } from './PomodoroTimer';
@@ -16,6 +15,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, BarChart3, Brain, Calculator, Target } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { EnhancedCalendar } from './EnhancedCalendar';
+import { CategoryGoals } from './CategoryGoals';
+import { GamificationStats } from './GamificationStats';
+import { TodoList } from './TodoList';
 
 export interface Activity {
   id: string;
@@ -28,11 +31,42 @@ export interface Activity {
   isActive?: boolean;
 }
 
+interface CalendarEvent {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;
+  type: 'event' | 'todo';
+}
+
+interface CategoryGoal {
+  id: string;
+  category: string;
+  weeklyMinutes: number;
+  currentMinutes: number;
+}
+
+interface TodoItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: Date;
+  category?: string;
+}
+
 export const TimeFlowDashboard = () => {
   const [activities, setActivities] = useLocalStorage<Activity[]>('timeflow-activities', []);
   const [currentView, setCurrentView] = useState<'dashboard' | 'calendar' | 'insights' | 'calculator'>('dashboard');
   const [streak, setStreak] = useLocalStorage<number>('timeflow-streak', 0);
   const [lastActiveDate, setLastActiveDate] = useLocalStorage<string>('timeflow-last-active', '');
+  
+  // New state for enhanced features
+  const [calendarEvents, setCalendarEvents] = useLocalStorage<CalendarEvent[]>('timeflow-events', []);
+  const [categoryGoals, setCategoryGoals] = useLocalStorage<CategoryGoal[]>('timeflow-goals', []);
+  const [todos, setTodos] = useLocalStorage<TodoItem[]>('timeflow-todos', []);
+  const [timerCount, setTimerCount] = useLocalStorage<number>('timeflow-timer-count', 0);
+  const [pomodoroCount, setPomodoroCount] = useLocalStorage<number>('timeflow-pomodoro-count', 0);
+  const [focusModeCount, setFocusModeCount] = useLocalStorage<number>('timeflow-focus-count', 0);
 
   useEffect(() => {
     const today = new Date().toDateString();
@@ -55,6 +89,7 @@ export const TimeFlowDashboard = () => {
       id: Date.now().toString(),
     };
     setActivities(prev => [...prev, newActivity]);
+    setTimerCount(prev => prev + 1);
   };
 
   const updateActivity = (id: string, updates: Partial<Activity>) => {
@@ -67,6 +102,59 @@ export const TimeFlowDashboard = () => {
     setActivities(prev => prev.filter(activity => activity.id !== id));
   };
 
+  const addCalendarEvent = (event: Omit<CalendarEvent, 'id'>) => {
+    const newEvent: CalendarEvent = {
+      ...event,
+      id: Date.now().toString(),
+    };
+    setCalendarEvents(prev => [...prev, newEvent]);
+  };
+
+  const deleteCalendarEvent = (id: string) => {
+    setCalendarEvents(prev => prev.filter(event => event.id !== id));
+  };
+
+  const addCategoryGoal = (goal: Omit<CategoryGoal, 'id' | 'currentMinutes'>) => {
+    const newGoal: CategoryGoal = {
+      ...goal,
+      id: Date.now().toString(),
+      currentMinutes: 0,
+    };
+    setCategoryGoals(prev => [...prev, newGoal]);
+  };
+
+  const updateCategoryGoal = (id: string, updates: Partial<CategoryGoal>) => {
+    setCategoryGoals(prev => prev.map(goal => 
+      goal.id === id ? { ...goal, ...updates } : goal
+    ));
+  };
+
+  const addTodo = (todo: Omit<TodoItem, 'id'>) => {
+    const newTodo: TodoItem = {
+      ...todo,
+      id: Date.now().toString(),
+    };
+    setTodos(prev => [...prev, newTodo]);
+  };
+
+  const toggleTodo = (id: string) => {
+    setTodos(prev => prev.map(todo => 
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const deleteTodo = (id: string) => {
+    setTodos(prev => prev.filter(todo => todo.id !== id));
+  };
+
+  const incrementPomodoroCount = () => {
+    setPomodoroCount(prev => prev + 1);
+  };
+
+  const incrementFocusCount = () => {
+    setFocusModeCount(prev => prev + 1);
+  };
+
   const totalTimeToday = activities
     .filter(activity => {
       const activityDate = new Date(activity.startTime).toDateString();
@@ -75,9 +163,13 @@ export const TimeFlowDashboard = () => {
     })
     .reduce((total, activity) => total + activity.duration, 0);
 
+  const completedGoals = categoryGoals.filter(goal => 
+    goal.currentMinutes >= Math.floor(goal.weeklyMinutes / 60)
+  ).length;
+
   return (
     <div className="min-h-screen gradient-bg p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="w-full max-w-none mx-auto space-y-6">
         {/* Header */}
         <Card className="glass-effect p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -130,12 +222,15 @@ export const TimeFlowDashboard = () => {
             <Badge variant="secondary" className="bg-white/20 text-white">
               📊 {activities.length} total activities
             </Badge>
+            <Badge variant="secondary" className="bg-white/20 text-white">
+              🎯 {completedGoals} goals completed
+            </Badge>
           </div>
         </Card>
 
         {currentView === 'dashboard' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Left Column - Main Timer */}
             <div className="lg:col-span-2 space-y-6">
               <ActiveTimer 
                 activities={activities}
@@ -148,24 +243,54 @@ export const TimeFlowDashboard = () => {
               />
             </div>
 
-            {/* Right Column */}
+            {/* Right Column - Stats and Tools */}
             <div className="space-y-6">
-              <StreakCounter streak={streak} />
-              <PomodoroTimer />
+              <GamificationStats 
+                timerCount={timerCount}
+                pomodoroCount={pomodoroCount}
+                focusModeCount={focusModeCount}
+                goalsCompleted={completedGoals}
+                streak={streak}
+              />
+              <PomodoroTimer onComplete={incrementPomodoroCount} />
               <TodaysStats activities={activities} />
               <QuickTimer />
-              <FocusMode />
-              <WeeklyGoal activities={activities} />
+            </div>
+
+            {/* Far Right Column - Goals and Todos */}
+            <div className="space-y-6">
+              <CategoryGoals 
+                activities={activities}
+                goals={categoryGoals}
+                onAddGoal={addCategoryGoal}
+                onUpdateGoal={updateCategoryGoal}
+              />
+              <TodoList 
+                todos={todos}
+                onAddTodo={addTodo}
+                onToggleTodo={toggleTodo}
+                onDeleteTodo={deleteTodo}
+              />
+              <FocusMode onActivate={incrementFocusCount} />
+              <StreakCounter streak={streak} />
             </div>
           </div>
         )}
 
         {currentView === 'calendar' && (
-          <CalendarView activities={activities} />
+          <EnhancedCalendar 
+            activities={activities}
+            events={calendarEvents}
+            onAddEvent={addCalendarEvent}
+            onDeleteEvent={deleteCalendarEvent}
+          />
         )}
 
         {currentView === 'insights' && (
-          <AIInsights activities={activities} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AIInsights activities={activities} />
+            <TimeCalculator />
+          </div>
         )}
 
         {currentView === 'calculator' && (

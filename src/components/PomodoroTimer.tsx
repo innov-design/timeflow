@@ -1,9 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, RotateCcw, Timer } from 'lucide-react';
 
-export const PomodoroTimer = () => {
+interface PomodoroTimerProps {
+  onComplete?: () => void;
+}
+
+export const PomodoroTimer: React.FC<PomodoroTimerProps> = ({ onComplete }) => {
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes
   const [isRunning, setIsRunning] = useState(false);
   const [session, setSession] = useState<'work' | 'break'>('work');
@@ -18,6 +23,7 @@ export const PomodoroTimer = () => {
       setIsRunning(false);
       // Switch session
       if (session === 'work') {
+        onComplete?.();
         setSession('break');
         setTimeLeft(5 * 60); // 5 minute break
       } else {
@@ -26,7 +32,7 @@ export const PomodoroTimer = () => {
       }
     }
     return () => clearInterval(interval);
-  }, [isRunning, timeLeft, session]);
+  }, [isRunning, timeLeft, session, onComplete]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -63,7 +69,7 @@ export const PomodoroTimer = () => {
           <Button 
             onClick={startPause}
             size="sm"
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+            className="bg-blue-500 hover:bg-blue-600 text-white border-0"
           >
             <Play className="w-4 h-4 mr-1" />
             {isRunning ? 'Pause' : 'Start'}
@@ -71,8 +77,7 @@ export const PomodoroTimer = () => {
           <Button 
             onClick={reset}
             size="sm"
-            variant="outline"
-            className="border-white/30 text-white hover:bg-white/10"
+            className="bg-gray-600 hover:bg-gray-700 text-white border-0"
           >
             <RotateCcw className="w-4 h-4 mr-1" />
             Reset

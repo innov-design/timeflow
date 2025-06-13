@@ -2,52 +2,47 @@
 export const categorizeActivity = (activityName: string): string => {
   const activity = activityName.toLowerCase();
   
-  // Work & Professional
-  if (activity.includes('meeting') || activity.includes('work') || activity.includes('project') || 
-      activity.includes('email') || activity.includes('call') || activity.includes('presentation') ||
-      activity.includes('coding') || activity.includes('development') || activity.includes('office')) {
-    return 'Work & Professional';
-  }
-  
-  // Learning & Education
+  // Learning and Education
   if (activity.includes('study') || activity.includes('learn') || activity.includes('course') ||
       activity.includes('read') || activity.includes('research') || activity.includes('tutorial') ||
-      activity.includes('practice') || activity.includes('training') || activity.includes('skill')) {
-    return 'Learning & Education';
+      activity.includes('practice') || activity.includes('training') || activity.includes('skill') ||
+      activity.includes('book') || activity.includes('homework') || activity.includes('exam') ||
+      activity.includes('class') || activity.includes('lecture') || activity.includes('workshop')) {
+    return 'Learning and Education';
   }
   
-  // Health & Fitness
+  // Physical Activity
   if (activity.includes('exercise') || activity.includes('workout') || activity.includes('gym') ||
       activity.includes('run') || activity.includes('walk') || activity.includes('yoga') ||
-      activity.includes('sport') || activity.includes('fitness') || activity.includes('health')) {
-    return 'Health & Fitness';
+      activity.includes('sport') || activity.includes('fitness') || activity.includes('health') ||
+      activity.includes('bike') || activity.includes('swim') || activity.includes('dance') ||
+      activity.includes('hike') || activity.includes('stretch') || activity.includes('cardio')) {
+    return 'Physical Activity';
   }
   
-  // Creative & Hobbies
-  if (activity.includes('draw') || activity.includes('paint') || activity.includes('music') ||
-      activity.includes('write') || activity.includes('creative') || activity.includes('art') ||
-      activity.includes('hobby') || activity.includes('craft') || activity.includes('design')) {
-    return 'Creative & Hobbies';
+  // Eating
+  if (activity.includes('eat') || activity.includes('meal') || activity.includes('breakfast') ||
+      activity.includes('lunch') || activity.includes('dinner') || activity.includes('snack') ||
+      activity.includes('cook') || activity.includes('food') || activity.includes('restaurant') ||
+      activity.includes('kitchen') || activity.includes('recipe') || activity.includes('grocery')) {
+    return 'Eating';
   }
   
-  // Personal & Life
-  if (activity.includes('clean') || activity.includes('cook') || activity.includes('shop') ||
-      activity.includes('personal') || activity.includes('family') || activity.includes('friend') ||
-      activity.includes('social') || activity.includes('chore') || activity.includes('home')) {
-    return 'Personal & Life';
+  // Time with Family
+  if (activity.includes('family') || activity.includes('parent') || activity.includes('child') ||
+      activity.includes('sibling') || activity.includes('mom') || activity.includes('dad') ||
+      activity.includes('mother') || activity.includes('father') || activity.includes('kids') ||
+      activity.includes('relatives') || activity.includes('together') || activity.includes('visit')) {
+    return 'Time with Family';
   }
   
-  // Entertainment
-  if (activity.includes('watch') || activity.includes('movie') || activity.includes('game') ||
-      activity.includes('tv') || activity.includes('entertainment') || activity.includes('fun') ||
-      activity.includes('relax') || activity.includes('browse') || activity.includes('social media')) {
-    return 'Entertainment';
-  }
-  
-  // Transport & Travel
-  if (activity.includes('drive') || activity.includes('travel') || activity.includes('commute') ||
-      activity.includes('transport') || activity.includes('trip') || activity.includes('journey')) {
-    return 'Transport & Travel';
+  // Break Time
+  if (activity.includes('break') || activity.includes('rest') || activity.includes('relax') ||
+      activity.includes('nap') || activity.includes('sleep') || activity.includes('chill') ||
+      activity.includes('leisure') || activity.includes('free time') || activity.includes('pause') ||
+      activity.includes('entertainment') || activity.includes('game') || activity.includes('tv') ||
+      activity.includes('movie') || activity.includes('music') || activity.includes('social media')) {
+    return 'Break Time';
   }
   
   // Default category
@@ -56,26 +51,22 @@ export const categorizeActivity = (activityName: string): string => {
 
 export const getCategoryColor = (category: string): string => {
   switch (category) {
-    case 'Work & Professional': return '#3B82F6'; // Blue
-    case 'Learning & Education': return '#10B981'; // Green
-    case 'Health & Fitness': return '#F59E0B'; // Orange
-    case 'Creative & Hobbies': return '#8B5CF6'; // Purple
-    case 'Personal & Life': return '#EF4444'; // Red
-    case 'Entertainment': return '#EC4899'; // Pink
-    case 'Transport & Travel': return '#06B6D4'; // Cyan
+    case 'Learning and Education': return '#3B82F6'; // Blue
+    case 'Physical Activity': return '#10B981'; // Green
+    case 'Eating': return '#F59E0B'; // Orange
+    case 'Time with Family': return '#EF4444'; // Red
+    case 'Break Time': return '#8B5CF6'; // Purple
     default: return '#6B7280'; // Gray
   }
 };
 
 export const getCategoryEmoji = (category: string): string => {
   switch (category) {
-    case 'Work & Professional': return '💼';
-    case 'Learning & Education': return '📚';
-    case 'Health & Fitness': return '💪';
-    case 'Creative & Hobbies': return '🎨';
-    case 'Personal & Life': return '🏠';
-    case 'Entertainment': return '🎬';
-    case 'Transport & Travel': return '🚗';
+    case 'Learning and Education': return '📚';
+    case 'Physical Activity': return '💪';
+    case 'Eating': return '🍽️';
+    case 'Time with Family': return '👨‍👩‍👧‍👦';
+    case 'Break Time': return '😌';
     default: return '📝';
   }
 };

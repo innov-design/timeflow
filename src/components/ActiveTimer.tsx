@@ -149,7 +149,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({
               <Button 
                 onClick={startTimer}
                 disabled={!activityName.trim()}
-                className="bg-green-500 hover:bg-green-600 text-white"
+                className="bg-green-500 hover:bg-green-600 text-white border-0"
               >
                 <Play className="w-4 h-4 mr-2" />
                 START
@@ -157,15 +157,14 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({
             ) : (
               <Button 
                 onClick={stopTimer}
-                className="bg-red-500 hover:bg-red-600 text-white"
+                className="bg-red-500 hover:bg-red-600 text-white border-0"
               >
                 STOP
               </Button>
             )}
             <Button 
               onClick={resetTimer}
-              variant="outline"
-              className="border-white/30 text-white hover:bg-white/10"
+              className="bg-gray-600 hover:bg-gray-700 text-white border-0"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
               RESET
@@ -194,7 +193,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({
             <Button 
               onClick={startTimer}
               disabled={!activityName.trim()}
-              className="w-full bg-primary hover:bg-primary/90"
+              className="w-full bg-primary hover:bg-primary/90 border-0"
             >
               ADD CURRENT ACTIVITY
             </Button>
@@ -246,8 +245,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({
           <Button 
             onClick={addPastActivity}
             disabled={!pastActivityName.trim() || !pastHours || !pastMinutes}
-            variant="outline"
-            className="w-full border-white/30 text-white hover:bg-white/10"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white border-0"
           >
             ADD PAST ACTIVITY
           </Button>
