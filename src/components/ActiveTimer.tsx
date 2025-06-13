@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Play, Timer, Reset } from 'lucide-react';
+import { Play, Timer, RotateCcw } from 'lucide-react';
 import { Activity } from './TimeFlowDashboard';
 import { categorizeActivity } from '@/utils/aiCategorizer';
 
@@ -168,7 +167,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({
               variant="outline"
               className="border-white/30 text-white hover:bg-white/10"
             >
-              <Reset className="w-4 h-4 mr-2" />
+              <RotateCcw className="w-4 h-4 mr-2" />
               RESET
             </Button>
           </div>

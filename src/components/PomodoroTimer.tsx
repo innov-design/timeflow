@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Reset, Timer } from 'lucide-react';
+import { Play, RotateCcw, Timer } from 'lucide-react';
 
 export const PomodoroTimer = () => {
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes
@@ -75,7 +74,7 @@ export const PomodoroTimer = () => {
             variant="outline"
             className="border-white/30 text-white hover:bg-white/10"
           >
-            <Reset className="w-4 h-4 mr-1" />
+            <RotateCcw className="w-4 h-4 mr-1" />
             Reset
           </Button>
         </div>
