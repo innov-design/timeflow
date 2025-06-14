@@ -122,12 +122,12 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   }, {} as Record<string, number>);
 
   const totalTime = Object.values(categoryDistribution).reduce((sum: number, time) => sum + (time as number), 0);
-  const workTime = ((categoryDistribution['Work'] as number) || 0) + 
-                   ((categoryDistribution['Education'] as number) || 0) + 
-                   ((categoryDistribution['Learning'] as number) || 0);
-  const leisureTime = (categoryDistribution['Leisure'] as number) || 0;
-  const exerciseTime = ((categoryDistribution['Exercise'] as number) || 0) + 
-                       ((categoryDistribution['Fitness'] as number) || 0);
+  const workTime = (categoryDistribution['Work'] as number || 0) + 
+                   (categoryDistribution['Education'] as number || 0) + 
+                   (categoryDistribution['Learning'] as number || 0);
+  const leisureTime = categoryDistribution['Leisure'] as number || 0;
+  const exerciseTime = (categoryDistribution['Exercise'] as number || 0) + 
+                       (categoryDistribution['Fitness'] as number || 0);
   
   const workPercentage = totalTime > 0 ? (workTime / totalTime) * 100 : 0;
   const leisurePercentage = totalTime > 0 ? (leisureTime / totalTime) * 100 : 0;
