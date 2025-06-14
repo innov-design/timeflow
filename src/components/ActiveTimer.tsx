@@ -155,7 +155,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
             <Button 
               onClick={() => setShowPastActivityForm(true)}
               variant="outline"
-              className="w-full border-white/30 text-white hover:bg-white/10"
+              className="w-full border-white/30 text-white hover:bg-white/10 bg-transparent"
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Past Activity
@@ -196,7 +196,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
             <Button 
               onClick={() => setShowPastActivityForm(false)}
               variant="outline"
-              className="w-full border-white/30 text-white hover:bg-white/10"
+              className="w-full border-white/30 text-white hover:bg-white/10 bg-transparent"
             >
               Cancel
             </Button>

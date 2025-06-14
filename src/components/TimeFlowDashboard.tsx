@@ -268,27 +268,56 @@ export const TimeFlowDashboard = () => {
         </Card>
 
         {currentView === 'dashboard' && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Left Column - Main Timer */}
-            <div className="lg:col-span-1 space-y-6">
-              <ActiveTimer 
-                activities={activities}
-                onAddActivity={addActivity}
-                onUpdateActivity={updateActivity}
-              />
-              <GamificationStats 
-                timerCount={timerCount}
-                pomodoroCount={pomodoroCount}
-                focusModeCount={focusModeCount}
-                goalsCompleted={completedGoals}
-                streak={streak}
-              />
-              <PomodoroTimer onComplete={incrementPomodoroCount} />
-              <CustomTimer />
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Main Timer */}
+              <div className="space-y-6">
+                <ActiveTimer 
+                  activities={activities}
+                  onAddActivity={addActivity}
+                  onUpdateActivity={updateActivity}
+                />
+                <PomodoroTimer onComplete={incrementPomodoroCount} />
+                <CustomTimer />
+              </div>
+
+              {/* Center Column - Activities Log */}
+              <div className="space-y-6">
+                <ActivitiesLog 
+                  activities={activities}
+                  onDeleteActivity={deleteActivity}
+                />
+              </div>
+
+              {/* Right Column - Goals, Todos, Stats */}
+              <div className="space-y-6">
+                <CategoryGoals 
+                  activities={activities}
+                  goals={categoryGoals}
+                  onAddGoal={addCategoryGoal}
+                  onUpdateGoal={updateCategoryGoal}
+                />
+                <TodoList 
+                  todos={todos}
+                  onAddTodo={addTodo}
+                  onToggleTodo={toggleTodo}
+                  onDeleteTodo={deleteTodo}
+                />
+                <TodaysStats activities={activities} />
+                <StreakCounter streak={streak} />
+                <GamificationStats 
+                  timerCount={timerCount}
+                  pomodoroCount={pomodoroCount}
+                  focusModeCount={focusModeCount}
+                  goalsCompleted={completedGoals}
+                  streak={streak}
+                />
+                <FocusMode onActivate={incrementFocusCount} />
+              </div>
             </div>
 
-            {/* Center Column - AI Insights & Stats */}
-            <div className="lg:col-span-2 space-y-6">
+            {/* AI Insights Section - Bottom */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Category Breakdown Chart */}
               <Card className="glass-effect border-white/20">
                 <CardHeader>
@@ -344,33 +373,8 @@ export const TimeFlowDashboard = () => {
                   </ChartContainer>
                 </CardContent>
               </Card>
-
-              {/* Activities Log */}
-              <ActivitiesLog 
-                activities={activities}
-                onDeleteActivity={deleteActivity}
-              />
             </div>
-
-            {/* Right Column - Goals, Todos, Stats */}
-            <div className="space-y-6">
-              <CategoryGoals 
-                activities={activities}
-                goals={categoryGoals}
-                onAddGoal={addCategoryGoal}
-                onUpdateGoal={updateCategoryGoal}
-              />
-              <TodoList 
-                todos={todos}
-                onAddTodo={addTodo}
-                onToggleTodo={toggleTodo}
-                onDeleteTodo={deleteTodo}
-              />
-              <TodaysStats activities={activities} />
-              <StreakCounter streak={streak} />
-              <FocusMode onActivate={incrementFocusCount} />
-            </div>
-          </div>
+          </>
         )}
 
         {currentView === 'calendar' && (

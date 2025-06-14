@@ -82,7 +82,7 @@ export const CustomTimer = () => {
                 onClick={() => setCustomTime(5)}
                 size="sm"
                 variant="outline"
-                className="border-white/30 text-white hover:bg-white/10"
+                className="border-white/30 text-white hover:bg-white/10 bg-transparent"
               >
                 5min
               </Button>
@@ -90,7 +90,7 @@ export const CustomTimer = () => {
                 onClick={() => setCustomTime(15)}
                 size="sm"
                 variant="outline"
-                className="border-white/30 text-white hover:bg-white/10"
+                className="border-white/30 text-white hover:bg-white/10 bg-transparent"
               >
                 15min
               </Button>
@@ -98,7 +98,7 @@ export const CustomTimer = () => {
                 onClick={() => setCustomTime(30)}
                 size="sm"
                 variant="outline"
-                className="border-white/30 text-white hover:bg-white/10"
+                className="border-white/30 text-white hover:bg-white/10 bg-transparent"
               >
                 30min
               </Button>
@@ -129,7 +129,7 @@ export const CustomTimer = () => {
               <Button 
                 onClick={resetTimer}
                 variant="outline"
-                className="border-white/30 text-white hover:bg-white/10"
+                className="border-white/30 text-white hover:bg-white/10 bg-transparent"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
