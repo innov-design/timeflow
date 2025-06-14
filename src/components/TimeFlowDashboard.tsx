@@ -272,7 +272,7 @@ export const TimeFlowDashboard = () => {
           <>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Left Column - Timers and Activities */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <ActiveTimer 
                   activities={activities}
                   onAddActivity={addActivity}
@@ -287,7 +287,7 @@ export const TimeFlowDashboard = () => {
               </div>
 
               {/* Center Column - Goals and Todos */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <CategoryGoals 
                   activities={activities}
                   goals={categoryGoals}
@@ -300,84 +300,83 @@ export const TimeFlowDashboard = () => {
                   onToggleTodo={toggleTodo}
                   onDeleteTodo={deleteTodo}
                 />
+                {/* Category Breakdown Chart - Moved here */}
+                <Card className="glass-effect border-white/20">
+                  <CardHeader>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5" />
+                      Category Breakdown
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {chartData.length > 0 ? (
+                      <ChartContainer config={{}} className="h-[200px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={chartData}>
+                            <XAxis 
+                              dataKey="name" 
+                              tick={{ fill: '#fff', fontSize: 10 }}
+                              angle={-45}
+                              textAnchor="end"
+                              height={60}
+                            />
+                            <YAxis tick={{ fill: '#fff', fontSize: 10 }} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            <Bar dataKey="hours" fill="#8884d8" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ChartContainer>
+                    ) : (
+                      <div className="text-white/60 text-center py-8">
+                        No data available yet. Start tracking activities!
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column - Stats and Focus */}
+              <div className="space-y-3">
+                <TodaysStats activities={activities} />
+                <StreakCounter streak={streak} />
+                <FocusMode onActivate={incrementFocusCount} />
                 <GamificationStats 
                   timerCount={timerCount}
                   pomodoroCount={pomodoroCount}
                   focusModeCount={focusModeCount}
                   goalsCompleted={completedGoals}
                   streak={streak}
+                  productivityScore={productivityScore}
+                  totalTimeToday={totalTimeToday}
+                  activities={activities}
                 />
-              </div>
-
-              {/* Right Column - Stats and Focus */}
-              <div className="space-y-4">
-                <TodaysStats activities={activities} />
-                <StreakCounter streak={streak} />
-                <FocusMode onActivate={incrementFocusCount} />
               </div>
             </div>
 
             {/* Enhanced Data Visualization Section - Bottom */}
             <DataVisualization activities={activities} />
 
-            {/* Original AI Insights Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Category Breakdown Chart */}
-              <Card className="glass-effect border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5" />
-                    Category Breakdown
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {chartData.length > 0 ? (
-                    <ChartContainer config={{}} className="h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData}>
-                          <XAxis 
-                            dataKey="name" 
-                            tick={{ fill: '#fff', fontSize: 12 }}
-                            angle={-45}
-                            textAnchor="end"
-                            height={60}
-                          />
-                          <YAxis tick={{ fill: '#fff', fontSize: 12 }} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="hours" fill="#8884d8" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  ) : (
-                    <div className="text-white/60 text-center py-8">
-                      No data available yet. Start tracking activities!
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Weekly Progress */}
-              <Card className="glass-effect border-white/20">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5" />
-                    Weekly Progress
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer config={{}} className="h-[200px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={weeklyData}>
-                        <XAxis dataKey="day" tick={{ fill: '#fff', fontSize: 12 }} />
-                        <YAxis tick={{ fill: '#fff', fontSize: 12 }} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey="hours" stroke="#8884d8" strokeWidth={2} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Weekly Progress - Bottom */}
+            <Card className="glass-effect border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Weekly Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={{}} className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={weeklyData}>
+                      <XAxis dataKey="day" tick={{ fill: '#fff', fontSize: 12 }} />
+                      <YAxis tick={{ fill: '#fff', fontSize: 12 }} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line type="monotone" dataKey="hours" stroke="#8884d8" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
           </>
         )}
 
