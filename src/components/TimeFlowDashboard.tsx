@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ActiveTimer } from './ActiveTimer';
 import { PomodoroTimer } from './PomodoroTimer';
@@ -213,7 +214,7 @@ export const TimeFlowDashboard = () => {
 
   return (
     <div className="min-h-screen gradient-bg p-4">
-      <div className="w-full max-w-none mx-auto space-y-6">
+      <div className="w-full max-w-none mx-auto space-y-4">
         {/* Header */}
         <Card className="glass-effect p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -269,28 +270,24 @@ export const TimeFlowDashboard = () => {
 
         {currentView === 'dashboard' && (
           <>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Main Timer */}
-              <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Left Column - Timers and Activities */}
+              <div className="space-y-4">
                 <ActiveTimer 
                   activities={activities}
                   onAddActivity={addActivity}
                   onUpdateActivity={updateActivity}
                 />
-                <PomodoroTimer onComplete={incrementPomodoroCount} />
-                <CustomTimer />
-              </div>
-
-              {/* Center Column - Activities Log */}
-              <div className="space-y-6">
                 <ActivitiesLog 
                   activities={activities}
                   onDeleteActivity={deleteActivity}
                 />
+                <PomodoroTimer onComplete={incrementPomodoroCount} />
+                <CustomTimer />
               </div>
 
-              {/* Right Column - Goals, Todos, Stats */}
-              <div className="space-y-6">
+              {/* Center Column - Goals and Todos */}
+              <div className="space-y-4">
                 <CategoryGoals 
                   activities={activities}
                   goals={categoryGoals}
@@ -303,8 +300,6 @@ export const TimeFlowDashboard = () => {
                   onToggleTodo={toggleTodo}
                   onDeleteTodo={deleteTodo}
                 />
-                <TodaysStats activities={activities} />
-                <StreakCounter streak={streak} />
                 <GamificationStats 
                   timerCount={timerCount}
                   pomodoroCount={pomodoroCount}
@@ -312,12 +307,18 @@ export const TimeFlowDashboard = () => {
                   goalsCompleted={completedGoals}
                   streak={streak}
                 />
+              </div>
+
+              {/* Right Column - Stats and Focus */}
+              <div className="space-y-4">
+                <TodaysStats activities={activities} />
+                <StreakCounter streak={streak} />
                 <FocusMode onActivate={incrementFocusCount} />
               </div>
             </div>
 
             {/* AI Insights Section - Bottom */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Category Breakdown Chart */}
               <Card className="glass-effect border-white/20">
                 <CardHeader>
