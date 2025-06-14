@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ActiveTimer } from './ActiveTimer';
 import { PomodoroTimer } from './PomodoroTimer';
@@ -197,6 +196,18 @@ export const TimeFlowDashboard = () => {
     }));
   };
 
+  const deleteHabit = (id: string) => {
+    setHabits(prev => prev.filter(habit => habit.id !== id));
+  };
+
+  const resetProductivityScore = () => {
+    // Reset relevant counters that affect productivity score
+    setPomodoroCount(0);
+    setFocusModeCount(0);
+    setTimerCount(0);
+    // Note: We don't reset streak as it's a longer-term metric
+  };
+
   const incrementPomodoroCount = () => {
     setPomodoroCount(prev => prev + 1);
   };
@@ -319,6 +330,7 @@ export const TimeFlowDashboard = () => {
                   pomodoroCount={pomodoroCount}
                   focusModeCount={focusModeCount}
                   streak={streak}
+                  onResetScore={resetProductivityScore}
                 />
                 <TodaysStats activities={activities} />
                 <CategoryGoals 
@@ -341,6 +353,7 @@ export const TimeFlowDashboard = () => {
                   habits={habits}
                   onAddHabit={addHabit}
                   onToggleHabit={toggleHabit}
+                  onDeleteHabit={deleteHabit}
                 />
                 <StreakCounter streak={streak} />
                 <FocusMode onActivate={incrementFocusCount} />

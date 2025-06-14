@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Check, X, Target } from 'lucide-react';
+import { Plus, Check, X, Target, Trash2 } from 'lucide-react';
 
 interface Habit {
   id: string;
@@ -19,12 +20,14 @@ interface HabitTrackerProps {
   habits: Habit[];
   onAddHabit: (habit: Omit<Habit, 'id'>) => void;
   onToggleHabit: (id: string) => void;
+  onDeleteHabit?: (id: string) => void;
 }
 
 export const HabitTracker: React.FC<HabitTrackerProps> = ({
   habits,
   onAddHabit,
-  onToggleHabit
+  onToggleHabit,
+  onDeleteHabit
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
@@ -95,21 +98,32 @@ export const HabitTracker: React.FC<HabitTrackerProps> = ({
                     🔥 {habit.streak} day streak
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => onToggleHabit(habit.id)}
-                  className={`w-8 h-8 p-0 ${
-                    isCompletedToday 
-                      ? 'bg-green-500 hover:bg-green-600' 
-                      : 'bg-white/20 hover:bg-white/30'
-                  }`}
-                >
-                  {isCompletedToday ? (
-                    <Check className="w-4 h-4 text-white" />
-                  ) : (
-                    <X className="w-4 h-4 text-white/60" />
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    onClick={() => onToggleHabit(habit.id)}
+                    className={`w-8 h-8 p-0 ${
+                      isCompletedToday 
+                        ? 'bg-green-500 hover:bg-green-600' 
+                        : 'bg-white/20 hover:bg-white/30'
+                    }`}
+                  >
+                    {isCompletedToday ? (
+                      <Check className="w-4 h-4 text-white" />
+                    ) : (
+                      <X className="w-4 h-4 text-white/60" />
+                    )}
+                  </Button>
+                  {onDeleteHabit && (
+                    <Button
+                      size="sm"
+                      onClick={() => onDeleteHabit(habit.id)}
+                      className="w-8 h-8 p-0 bg-red-500/20 hover:bg-red-500/30 text-red-300"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                   )}
-                </Button>
+                </div>
               </div>
             );
           })}

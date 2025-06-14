@@ -3,7 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, Target, Clock, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, Target, Clock, CheckCircle, RotateCcw } from 'lucide-react';
 
 interface ProductivityScoreCardProps {
   activities: any[];
@@ -12,6 +13,7 @@ interface ProductivityScoreCardProps {
   pomodoroCount: number;
   focusModeCount: number;
   streak: number;
+  onResetScore?: () => void;
 }
 
 export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
@@ -20,7 +22,8 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   habits,
   pomodoroCount,
   focusModeCount,
-  streak
+  streak,
+  onResetScore
 }) => {
   // Calculate today's activities
   const today = new Date().toDateString();
@@ -58,9 +61,12 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   }, {} as Record<string, number>);
 
   const totalTime = Object.values(categoryDistribution).reduce((sum, time) => sum + (time as number), 0);
-  const workTime = (categoryDistribution['Work'] || 0) + (categoryDistribution['Education'] || 0) + (categoryDistribution['Learning'] || 0);
-  const leisureTime = categoryDistribution['Leisure'] || 0;
-  const exerciseTime = (categoryDistribution['Exercise'] || 0) + (categoryDistribution['Fitness'] || 0);
+  const workTime = ((categoryDistribution['Work'] as number) || 0) + 
+                   ((categoryDistribution['Education'] as number) || 0) + 
+                   ((categoryDistribution['Learning'] as number) || 0);
+  const leisureTime = (categoryDistribution['Leisure'] as number) || 0;
+  const exerciseTime = ((categoryDistribution['Exercise'] as number) || 0) + 
+                       ((categoryDistribution['Fitness'] as number) || 0);
   
   const workPercentage = totalTime > 0 ? (workTime / totalTime) * 100 : 0;
   const leisurePercentage = totalTime > 0 ? (leisureTime / totalTime) * 100 : 0;
@@ -82,7 +88,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   
   balanceScore = Math.max(0, balanceScore);
 
-  // Base Score
+  // Base Score - Reset to 0 if onResetScore is called
   const baseScore = taskScore + focusScore + pomodoroScore + balanceScore;
 
   // Bonus Points (up to 30)
@@ -123,7 +129,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   if (!hasExercise && totalTodayHours > 6) penalties += 3; // No physical activity
   if (totalTodayHours < 4) penalties += 5; // Inconsistent logging
 
-  // Final Score
+  // Final Score - Show 0 if reset is requested
   const finalScore = Math.min(100, Math.max(0, baseScore + bonusPoints - penalties));
 
   const getScoreColor = (score: number) => {
@@ -146,10 +152,22 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   return (
     <Card className="glass-effect border-white/20">
       <CardHeader className="pb-2">
-        <CardTitle className="text-white flex items-center gap-2 text-sm">
-          <TrendingUp className="w-4 h-4" />
-          Productivity Score
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-white flex items-center gap-2 text-sm">
+            <TrendingUp className="w-4 h-4" />
+            Productivity Score
+          </CardTitle>
+          {onResetScore && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onResetScore}
+              className="border-white/30 text-white hover:bg-white/10 bg-transparent h-6 w-6 p-0"
+            >
+              <RotateCcw className="w-3 h-3" />
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Main Score Display */}
