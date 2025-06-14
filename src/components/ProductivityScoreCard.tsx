@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -111,7 +110,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
     return acc;
   }, {} as Record<string, number>);
 
-  const totalTime = Object.values(categoryDistribution).reduce((sum: number, time) => sum + (time as number), 0);
+  const totalTime = Object.values(categoryDistribution).reduce((sum, time) => sum + time, 0);
   const workTime = (categoryDistribution['Work'] || 0) + 
                    (categoryDistribution['Education'] || 0) + 
                    (categoryDistribution['Learning'] || 0);
