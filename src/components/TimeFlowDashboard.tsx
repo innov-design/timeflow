@@ -201,11 +201,19 @@ export const TimeFlowDashboard = () => {
   };
 
   const resetProductivityScore = () => {
-    // Reset relevant counters that affect productivity score
+    // Reset all productivity-related counters to zero
     setPomodoroCount(0);
     setFocusModeCount(0);
     setTimerCount(0);
-    // Note: We don't reset streak as it's a longer-term metric
+    setStreak(0);
+    setActivities([]);
+    setTodos(prev => prev.map(todo => ({ ...todo, completed: false })));
+    setHabits(prev => prev.map(habit => ({ 
+      ...habit, 
+      completed: false, 
+      streak: 0, 
+      lastCompleted: undefined 
+    })));
   };
 
   const incrementPomodoroCount = () => {
@@ -304,10 +312,10 @@ export const TimeFlowDashboard = () => {
 
         {currentView === 'dashboard' && (
           <>
-            {/* Main Dashboard Grid - No gaps, full width utilization */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-2 h-[calc(100vh-200px)]">
-              {/* Column 1 - Timers */}
-              <div className="space-y-2 h-full overflow-y-auto">
+            {/* Improved Grid Layout - Proper alignment and spacing */}
+            <div className="grid grid-cols-12 gap-2 h-[calc(100vh-200px)]">
+              {/* Column 1 - Timers (3 columns width) */}
+              <div className="col-span-12 lg:col-span-3 space-y-2 h-full overflow-y-auto">
                 <ActiveTimer 
                   activities={activities}
                   onAddActivity={addActivity}
@@ -321,8 +329,8 @@ export const TimeFlowDashboard = () => {
                 <CustomTimer />
               </div>
 
-              {/* Column 2 - Goals and Stats */}
-              <div className="space-y-2 h-full overflow-y-auto">
+              {/* Column 2 - Productivity & Goals (3 columns width) */}
+              <div className="col-span-12 lg:col-span-3 space-y-2 h-full overflow-y-auto">
                 <ProductivityScoreCard 
                   activities={activities}
                   todos={todos}
@@ -347,8 +355,8 @@ export const TimeFlowDashboard = () => {
                 />
               </div>
 
-              {/* Column 3 - Habits and Focus */}
-              <div className="space-y-2 h-full overflow-y-auto">
+              {/* Column 3 - Habits & Focus (3 columns width) */}
+              <div className="col-span-12 lg:col-span-3 space-y-2 h-full overflow-y-auto">
                 <HabitTracker 
                   habits={habits}
                   onAddHabit={addHabit}
@@ -358,7 +366,7 @@ export const TimeFlowDashboard = () => {
                 <StreakCounter streak={streak} />
                 <FocusMode onActivate={incrementFocusCount} />
                 
-                {/* Category Breakdown Chart - Compact */}
+                {/* Category Breakdown Chart */}
                 <Card className="glass-effect border-white/20">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-white flex items-center gap-2 text-sm">
@@ -393,8 +401,8 @@ export const TimeFlowDashboard = () => {
                 </Card>
               </div>
 
-              {/* Column 4 - Gamification */}
-              <div className="space-y-2 h-full overflow-y-auto">
+              {/* Column 4 - Gamification & Calendar (3 columns width) */}
+              <div className="col-span-12 lg:col-span-3 space-y-2 h-full overflow-y-auto">
                 <GamificationStats 
                   timerCount={timerCount}
                   pomodoroCount={pomodoroCount}
@@ -405,6 +413,11 @@ export const TimeFlowDashboard = () => {
                   totalTimeToday={totalTimeToday}
                   activities={activities}
                 />
+                
+                {/* Calendar View - Fills the unused space */}
+                <div className="h-[400px]">
+                  <CalendarView activities={activities} />
+                </div>
               </div>
             </div>
 

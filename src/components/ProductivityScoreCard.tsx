@@ -16,6 +16,61 @@ interface ProductivityScoreCardProps {
   onResetScore?: () => void;
 }
 
+// AI-driven productivity scoring for activities
+const getActivityProductivityScore = (activityName: string): number => {
+  const activity = activityName.toLowerCase();
+  
+  // High productivity (0.8-1.0)
+  if (activity.includes('codecademy') || activity.includes('coding') || 
+      activity.includes('programming') || activity.includes('study') || 
+      activity.includes('learn') || activity.includes('course') ||
+      activity.includes('work') || activity.includes('meeting') ||
+      activity.includes('training') || activity.includes('skill') ||
+      activity.includes('book') || activity.includes('research') ||
+      activity.includes('homework') || activity.includes('exam') ||
+      activity.includes('practice') || activity.includes('tutorial') ||
+      activity.includes('project') || activity.includes('lecture')) {
+    return 0.9;
+  }
+  
+  // Medium-high productivity (0.6-0.8)
+  if (activity.includes('exercise') || activity.includes('workout') || 
+      activity.includes('gym') || activity.includes('run') || 
+      activity.includes('yoga') || activity.includes('fitness') ||
+      activity.includes('planning') || activity.includes('organize') ||
+      activity.includes('email') || activity.includes('communication') ||
+      activity.includes('cooking') || activity.includes('clean')) {
+    return 0.7;
+  }
+  
+  // Medium productivity (0.4-0.6)
+  if (activity.includes('travel') || activity.includes('shopping') || 
+      activity.includes('errands') || activity.includes('maintenance') ||
+      activity.includes('admin') || activity.includes('calls') ||
+      activity.includes('walk') || activity.includes('commute') ||
+      activity.includes('family time') || activity.includes('social')) {
+    return 0.5;
+  }
+  
+  // Low-medium productivity (0.2-0.4)
+  if (activity.includes('tv') || activity.includes('movie') || 
+      activity.includes('music') || activity.includes('game') ||
+      activity.includes('leisure') || activity.includes('break') ||
+      activity.includes('entertainment') || activity.includes('browsing')) {
+    return 0.3;
+  }
+  
+  // Low productivity (0.0-0.2)
+  if (activity.includes('doomscroll') || activity.includes('social media') || 
+      activity.includes('scrolling') || activity.includes('procrastinating') ||
+      activity.includes('idle') || activity.includes('wasting time')) {
+    return 0.1;
+  }
+  
+  // Default medium-low for unknown activities
+  return 0.4;
+};
+
 export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   activities,
   todos,
@@ -39,8 +94,18 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   let taskScore = totalTasks > 0 ? (completedTasks / totalTasks) * 25 : 15;
   if (totalTasks > 0 && (completedTasks / totalTasks) > 0.9) taskScore += 2;
 
-  // 2. Focus Time Quality (20 points)
-  const targetDailyHours = 5; // 4-6 hours target
+  // 2. AI-Weighted Activity Productivity (30 points) - Increased weight
+  const weightedProductivityScore = todaysActivities.reduce((sum, activity) => {
+    const productivityWeight = getActivityProductivityScore(activity.name);
+    return sum + (activity.duration * productivityWeight);
+  }, 0);
+  
+  const totalActivityTime = todaysActivities.reduce((sum, activity) => sum + activity.duration, 0);
+  const averageProductivity = totalActivityTime > 0 ? weightedProductivityScore / totalActivityTime : 0.5;
+  const aiProductivityScore = averageProductivity * 30;
+
+  // 3. Focus Time Quality (15 points) - Reduced weight
+  const targetDailyHours = 5;
   const productiveCategories = ['Work', 'Education', 'Learning', 'Programming', 'Study', 'Technical'];
   const focusTime = todaysActivities
     .filter(activity => productiveCategories.some(cat => 
@@ -48,11 +113,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
     ))
     .reduce((sum, activity) => sum + activity.duration, 0) / 3600;
   
-  const focusScore = Math.min(20, (focusTime / targetDailyHours) * 20);
-
-  // 3. Pomodoro Effectiveness (15 points)
-  const pomodoroScore = pomodoroCount > 0 ? 
-    Math.min(15, (pomodoroCount / Math.max(pomodoroCount, 6)) * 15) : 10;
+  const focusScore = Math.min(15, (focusTime / targetDailyHours) * 15);
 
   // 4. Category Balance (10 points)
   const categoryDistribution = todaysActivities.reduce((acc, activity) => {
@@ -60,7 +121,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
     return acc;
   }, {} as Record<string, number>);
 
-  const totalTime = Object.values(categoryDistribution).reduce((sum, time) => sum + (time as number), 0);
+  const totalTime = Object.values(categoryDistribution).reduce((sum: number, time) => sum + (time as number), 0);
   const workTime = ((categoryDistribution['Work'] as number) || 0) + 
                    ((categoryDistribution['Education'] as number) || 0) + 
                    ((categoryDistribution['Learning'] as number) || 0);
@@ -72,64 +133,49 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   const leisurePercentage = totalTime > 0 ? (leisureTime / totalTime) * 100 : 0;
   const exercisePercentage = totalTime > 0 ? (exerciseTime / totalTime) * 100 : 0;
   
-  // Advanced balance scoring
   let balanceScore = 10;
   
-  // Work/Education should be 40-50%
   if (workPercentage < 40) balanceScore -= Math.floor((40 - workPercentage) / 5);
   if (workPercentage > 50) balanceScore -= Math.floor((workPercentage - 50) / 5);
-  
-  // Leisure should be 15-25%
   if (leisurePercentage < 15) balanceScore -= Math.floor((15 - leisurePercentage) / 5);
   if (leisurePercentage > 25) balanceScore -= Math.floor((leisurePercentage - 25) / 5);
-  
-  // Exercise should be 8-12%
   if (exercisePercentage < 8) balanceScore -= Math.floor((8 - exercisePercentage) / 5);
   
   balanceScore = Math.max(0, balanceScore);
 
-  // Base Score - Reset to 0 if onResetScore is called
-  const baseScore = taskScore + focusScore + pomodoroScore + balanceScore;
+  // Base Score (80 points total)
+  const baseScore = taskScore + aiProductivityScore + focusScore + balanceScore;
 
-  // Bonus Points (up to 30)
+  // Bonus Points (up to 20)
   let bonusPoints = 0;
   
-  // Consistency bonuses (15 max)
-  bonusPoints += Math.min(7, streak); // Daily streak
+  bonusPoints += Math.min(7, streak);
   const totalTodayHours = totalTodayTime / 3600;
-  if (todaysActivities.length > 0 && totalTodayHours > 4) bonusPoints += 3; // Activity consistency
-  if (totalTodayHours >= 6 && totalTodayHours <= 10) bonusPoints += 2; // Good daily routine
+  if (todaysActivities.length > 0 && totalTodayHours > 4) bonusPoints += 3;
+  if (totalTodayHours >= 6 && totalTodayHours <= 10) bonusPoints += 2;
   
-  // Wellness bonuses (10 max)
   const hasExercise = todaysActivities.some(activity => 
     activity.category.toLowerCase().includes('exercise') || 
     activity.category.toLowerCase().includes('fitness') ||
     activity.category.toLowerCase().includes('workout')
   );
-  if (hasExercise) bonusPoints += 5;
+  if (hasExercise) bonusPoints += 3;
   
-  // Break discipline (inferred from activity gaps)
-  const hasGoodBreaks = todaysActivities.length > 3; // Simple heuristic
-  if (hasGoodBreaks) bonusPoints += 3;
-  
-  // Habit completion bonus (5 max)
   const completedHabits = habits.filter(habit => {
     const today = new Date().toDateString();
     return habit.lastCompleted && new Date(habit.lastCompleted).toDateString() === today;
   }).length;
-  bonusPoints += Math.min(5, completedHabits * 2);
+  bonusPoints += Math.min(3, completedHabits);
 
-  // Efficiency bonuses (5 max)
-  bonusPoints += Math.min(3, focusModeCount); // Focus mode usage
-  if (todaysActivities.length > 0) bonusPoints += 1; // Consistent logging
+  bonusPoints += Math.min(2, focusModeCount);
 
-  // Penalties (max -15)
+  // Penalties
   let penalties = 0;
-  if (leisurePercentage > 35) penalties += 5; // Excessive leisure
-  if (!hasExercise && totalTodayHours > 6) penalties += 3; // No physical activity
-  if (totalTodayHours < 4) penalties += 5; // Inconsistent logging
+  if (leisurePercentage > 35) penalties += 5;
+  if (!hasExercise && totalTodayHours > 6) penalties += 3;
+  if (totalTodayHours < 4) penalties += 5;
 
-  // Final Score - Show 0 if reset is requested
+  // Final Score
   const finalScore = Math.min(100, Math.max(0, baseScore + bonusPoints - penalties));
 
   const getScoreColor = (score: number) => {
@@ -181,19 +227,19 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
 
         {/* Score Breakdown */}
         <div className="space-y-2">
-          <div className="text-white/80 text-xs font-medium">Base Components (70 pts):</div>
+          <div className="text-white/80 text-xs font-medium">Components (80 pts):</div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex justify-between">
               <span className="text-white/70">Tasks</span>
               <span className="text-white">{Math.round(taskScore)}/25</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/70">Focus</span>
-              <span className="text-white">{Math.round(focusScore)}/20</span>
+              <span className="text-white/70">AI Score</span>
+              <span className="text-white">{Math.round(aiProductivityScore)}/30</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/70">Pomodoro</span>
-              <span className="text-white">{Math.round(pomodoroScore)}/15</span>
+              <span className="text-white/70">Focus</span>
+              <span className="text-white">{Math.round(focusScore)}/15</span>
             </div>
             <div className="flex justify-between">
               <span className="text-white/70">Balance</span>
@@ -215,38 +261,32 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
             )}
             {hasExercise && (
               <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 text-xs">
-                💪 Exercise +5
+                💪 Exercise +3
               </Badge>
             )}
             {completedHabits > 0 && (
               <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 text-xs">
-                ✅ Habits +{Math.min(5, completedHabits * 2)}
+                ✅ Habits +{Math.min(3, completedHabits)}
               </Badge>
             )}
-            {focusModeCount > 0 && (
+            {averageProductivity > 0.7 && (
               <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300 text-xs">
-                🎯 Focus +{Math.min(3, focusModeCount)}
+                🤖 High AI Score
               </Badge>
             )}
           </div>
         </div>
 
-        {/* Distribution Breakdown */}
-        <div className="space-y-1">
-          <div className="text-white/80 text-xs font-medium">Today's Distribution:</div>
-          <div className="grid grid-cols-3 gap-2 text-xs">
-            <div className="text-center">
-              <div className="text-white font-medium">{Math.round(workPercentage)}%</div>
-              <div className="text-white/60">Work</div>
-            </div>
-            <div className="text-center">
-              <div className="text-white font-medium">{Math.round(leisurePercentage)}%</div>
-              <div className="text-white/60">Leisure</div>
-            </div>
-            <div className="text-center">
-              <div className="text-white font-medium">{Math.round(exercisePercentage)}%</div>
-              <div className="text-white/60">Exercise</div>
-            </div>
+        {/* AI Productivity Insight */}
+        <div className="bg-white/5 rounded p-2">
+          <div className="text-white/80 text-xs font-medium mb-1">AI Activity Analysis:</div>
+          <div className="text-white text-xs">
+            Avg. Productivity: {Math.round(averageProductivity * 100)}%
+          </div>
+          <div className="text-white/60 text-xs">
+            {averageProductivity > 0.7 ? 'Excellent activity choices!' : 
+             averageProductivity > 0.5 ? 'Good balance of activities' : 
+             'Focus on more productive activities'}
           </div>
         </div>
 
