@@ -88,32 +88,22 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
 
   const totalTodayTime = todaysActivities.reduce((sum, activity) => sum + activity.duration, 0);
 
-  // 1. Task Completion Rate (25 points)
-  const completedTasks = todos.filter(todo => todo.completed).length;
+  // 1. Task Completion Rate (25 points) - Reset to 0
+  const completedTasks = 0; // Reset to 0
   const totalTasks = todos.length;
-  let taskScore = totalTasks > 0 ? (completedTasks / totalTasks) * 25 : 15;
-  if (totalTasks > 0 && (completedTasks / totalTasks) > 0.9) taskScore += 2;
+  let taskScore = 0; // Reset to 0
 
-  // 2. AI-Weighted Activity Productivity (30 points) - Increased weight
-  const weightedProductivityScore = todaysActivities.reduce((sum, activity) => {
-    const productivityWeight = getActivityProductivityScore(activity.name);
-    return sum + (activity.duration * productivityWeight);
-  }, 0);
-  
+  // 2. AI-Weighted Activity Productivity (30 points) - Reset to 0
+  const weightedProductivityScore = 0; // Reset to 0
   const totalActivityTime = todaysActivities.reduce((sum, activity) => sum + activity.duration, 0);
-  const averageProductivity = totalActivityTime > 0 ? weightedProductivityScore / totalActivityTime : 0.5;
-  const aiProductivityScore = averageProductivity * 30;
+  const averageProductivity = 0; // Reset to 0
+  const aiProductivityScore = 0; // Reset to 0
 
-  // 3. Focus Time Quality (15 points) - Reduced weight
+  // 3. Focus Time Quality (15 points) - Reset to 0
   const targetDailyHours = 5;
   const productiveCategories = ['Work', 'Education', 'Learning', 'Programming', 'Study', 'Technical'];
-  const focusTime = todaysActivities
-    .filter(activity => productiveCategories.some(cat => 
-      activity.category.toLowerCase().includes(cat.toLowerCase())
-    ))
-    .reduce((sum, activity) => sum + activity.duration, 0) / 3600;
-  
-  const focusScore = Math.min(15, (focusTime / targetDailyHours) * 15);
+  const focusTime = 0; // Reset to 0
+  const focusScore = 0; // Reset to 0
 
   // 4. Category Balance (10 points)
   const categoryDistribution = todaysActivities.reduce((acc, activity) => {
@@ -122,12 +112,12 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   }, {} as Record<string, number>);
 
   const totalTime = Object.values(categoryDistribution).reduce((sum: number, time) => sum + (time as number), 0);
-  const workTime = (categoryDistribution['Work'] as number || 0) + 
-                   (categoryDistribution['Education'] as number || 0) + 
-                   (categoryDistribution['Learning'] as number || 0);
-  const leisureTime = categoryDistribution['Leisure'] as number || 0;
-  const exerciseTime = (categoryDistribution['Exercise'] as number || 0) + 
-                       (categoryDistribution['Fitness'] as number || 0);
+  const workTime = (categoryDistribution['Work'] || 0) + 
+                   (categoryDistribution['Education'] || 0) + 
+                   (categoryDistribution['Learning'] || 0);
+  const leisureTime = categoryDistribution['Leisure'] || 0;
+  const exerciseTime = (categoryDistribution['Exercise'] || 0) + 
+                       (categoryDistribution['Fitness'] || 0);
   
   const workPercentage = totalTime > 0 ? (workTime / totalTime) * 100 : 0;
   const leisurePercentage = totalTime > 0 ? (leisureTime / totalTime) * 100 : 0;
@@ -143,40 +133,17 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   
   balanceScore = Math.max(0, balanceScore);
 
-  // Base Score (80 points total)
-  const baseScore = taskScore + aiProductivityScore + focusScore + balanceScore;
+  // Base Score (80 points total) - All reset to 0
+  const baseScore = 0; // Reset to 0
 
-  // Bonus Points (up to 20)
-  let bonusPoints = 0;
-  
-  bonusPoints += Math.min(7, streak);
-  const totalTodayHours = totalTodayTime / 3600;
-  if (todaysActivities.length > 0 && totalTodayHours > 4) bonusPoints += 3;
-  if (totalTodayHours >= 6 && totalTodayHours <= 10) bonusPoints += 2;
-  
-  const hasExercise = todaysActivities.some(activity => 
-    activity.category.toLowerCase().includes('exercise') || 
-    activity.category.toLowerCase().includes('fitness') ||
-    activity.category.toLowerCase().includes('workout')
-  );
-  if (hasExercise) bonusPoints += 3;
-  
-  const completedHabits = habits.filter(habit => {
-    const today = new Date().toDateString();
-    return habit.lastCompleted && new Date(habit.lastCompleted).toDateString() === today;
-  }).length;
-  bonusPoints += Math.min(3, completedHabits);
+  // Bonus Points (up to 20) - Reset to 0
+  let bonusPoints = 0; // Reset to 0
 
-  bonusPoints += Math.min(2, focusModeCount);
+  // Penalties - Reset to 0
+  let penalties = 0; // Reset to 0
 
-  // Penalties
-  let penalties = 0;
-  if (leisurePercentage > 35) penalties += 5;
-  if (!hasExercise && totalTodayHours > 6) penalties += 3;
-  if (totalTodayHours < 4) penalties += 5;
-
-  // Final Score
-  const finalScore = Math.min(100, Math.max(0, baseScore + bonusPoints - penalties));
+  // Final Score - Reset to 0
+  const finalScore = 0; // Reset to 0
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-400';
@@ -259,21 +226,6 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
                 🔥 Streak +{Math.min(7, streak)}
               </Badge>
             )}
-            {hasExercise && (
-              <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 text-xs">
-                💪 Exercise +3
-              </Badge>
-            )}
-            {completedHabits > 0 && (
-              <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 text-xs">
-                ✅ Habits +{Math.min(3, completedHabits)}
-              </Badge>
-            )}
-            {averageProductivity > 0.7 && (
-              <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300 text-xs">
-                🤖 High AI Score
-              </Badge>
-            )}
           </div>
         </div>
 
@@ -284,9 +236,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
             Avg. Productivity: {Math.round(averageProductivity * 100)}%
           </div>
           <div className="text-white/60 text-xs">
-            {averageProductivity > 0.7 ? 'Excellent activity choices!' : 
-             averageProductivity > 0.5 ? 'Good balance of activities' : 
-             'Focus on more productive activities'}
+            Focus on more productive activities
           </div>
         </div>
 
@@ -301,7 +251,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
             <div className="text-white/60">Tasks</div>
           </div>
           <div className="text-center">
-            <div className="text-white font-medium">{completedHabits}</div>
+            <div className="text-white font-medium">0</div>
             <div className="text-white/60">Habits</div>
           </div>
         </div>
