@@ -58,41 +58,69 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
     return acc;
   }, {} as Record<string, number>);
 
-  const totalTime = Object.values(categoryDistribution).reduce((sum, time) => sum + time, 0);
-  const workPercentage = ((categoryDistribution['Work'] || 0) / totalTime) * 100;
-  const leisurePercentage = ((categoryDistribution['Leisure'] || 0) / totalTime) * 100;
+  const totalTime = Object.values(categoryDistribution).reduce((sum: number, time: number) => sum + time, 0);
+  const workPercentage = totalTime > 0 ? ((categoryDistribution['Work'] || 0) / totalTime) * 100 : 0;
+  const leisurePercentage = totalTime > 0 ? ((categoryDistribution['Leisure'] || 0) / totalTime) * 100 : 0;
+  const exercisePercentage = totalTime > 0 ? ((categoryDistribution['Exercise'] || 0) / totalTime) * 100 : 0;
   
-  // Simplified balance scoring
+  // Advanced balance scoring based on the formula
   let balanceScore = 10;
-  if (workPercentage > 60 || workPercentage < 30) balanceScore -= 3;
-  if (leisurePercentage > 30 || leisurePercentage < 10) balanceScore -= 2;
+  
+  // Work/Education should be 40-50%
+  if (workPercentage < 40) balanceScore -= Math.floor((40 - workPercentage) / 5);
+  if (workPercentage > 50) balanceScore -= Math.floor((workPercentage - 50) / 5);
+  
+  // Leisure should be 15-25%
+  if (leisurePercentage < 15) balanceScore -= Math.floor((15 - leisurePercentage) / 5);
+  if (leisurePercentage > 25) balanceScore -= Math.floor((leisurePercentage - 25) / 5);
+  
+  // Exercise should be 8-12%
+  if (exercisePercentage < 8) balanceScore -= Math.floor((8 - exercisePercentage) / 5);
+  
+  balanceScore = Math.max(0, balanceScore);
 
   // Base Score
   const baseScore = taskScore + focusScore + pomodoroScore + balanceScore;
 
-  // Bonus Points
+  // Bonus Points (up to 30)
   let bonusPoints = 0;
   
-  // Consistency bonuses
+  // Consistency bonuses (15 max)
   bonusPoints += Math.min(7, streak); // Daily streak
-  if (todaysActivities.length > 0 && totalTodayHours > 2) bonusPoints += 3; // Activity consistency
+  if (todaysActivities.length > 0 && totalTodayHours > 4) bonusPoints += 3; // Activity consistency
+  if (totalTodayHours >= 6 && totalTodayHours <= 10) bonusPoints += 2; // Good daily routine
   
-  // Wellness bonuses
+  // Wellness bonuses (10 max)
   const hasExercise = todaysActivities.some(activity => 
     activity.category.toLowerCase().includes('exercise') || 
-    activity.category.toLowerCase().includes('fitness')
+    activity.category.toLowerCase().includes('fitness') ||
+    activity.category.toLowerCase().includes('workout')
   );
   if (hasExercise) bonusPoints += 5;
   
-  // Habit completion bonus
-  const completedHabits = habits.filter(habit => habit.completed).length;
+  // Break discipline (inferred from activity gaps)
+  const hasGoodBreaks = todaysActivities.length > 3; // Simple heuristic
+  if (hasGoodBreaks) bonusPoints += 3;
+  
+  // Habit completion bonus (5 max)
+  const completedHabits = habits.filter(habit => {
+    const today = new Date().toDateString();
+    return habit.lastCompleted && new Date(habit.lastCompleted).toDateString() === today;
+  }).length;
   bonusPoints += Math.min(5, completedHabits * 2);
 
-  // Focus mode bonus
-  bonusPoints += Math.min(3, focusModeCount);
+  // Efficiency bonuses (5 max)
+  bonusPoints += Math.min(3, focusModeCount); // Focus mode usage
+  if (todaysActivities.length > 0) bonusPoints += 1; // Consistent logging
+
+  // Penalties (max -15)
+  let penalties = 0;
+  if (leisurePercentage > 35) penalties += 5; // Excessive leisure
+  if (!hasExercise && totalTodayHours > 6) penalties += 3; // No physical activity
+  if (totalTodayHours < 4) penalties += 5; // Inconsistent logging
 
   // Final Score
-  const finalScore = Math.min(100, Math.max(0, baseScore + bonusPoints));
+  const finalScore = Math.min(100, Math.max(0, baseScore + bonusPoints - penalties));
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'text-green-400';
@@ -131,7 +159,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
 
         {/* Score Breakdown */}
         <div className="space-y-2">
-          <div className="text-white/80 text-xs font-medium">Base Components:</div>
+          <div className="text-white/80 text-xs font-medium">Base Components (70 pts):</div>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex justify-between">
               <span className="text-white/70">Tasks</span>
@@ -154,7 +182,9 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
 
         {/* Bonus Points */}
         <div className="space-y-1">
-          <div className="text-white/80 text-xs font-medium">Bonuses: +{bonusPoints}</div>
+          <div className="text-white/80 text-xs font-medium">
+            Bonuses: +{bonusPoints} | Penalties: -{penalties}
+          </div>
           <div className="flex flex-wrap gap-1">
             {streak > 0 && (
               <Badge variant="secondary" className="bg-green-500/20 text-green-300 text-xs">
@@ -176,6 +206,25 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
                 🎯 Focus +{Math.min(3, focusModeCount)}
               </Badge>
             )}
+          </div>
+        </div>
+
+        {/* Distribution Breakdown */}
+        <div className="space-y-1">
+          <div className="text-white/80 text-xs font-medium">Today's Distribution:</div>
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="text-center">
+              <div className="text-white font-medium">{Math.round(workPercentage)}%</div>
+              <div className="text-white/60">Work</div>
+            </div>
+            <div className="text-center">
+              <div className="text-white font-medium">{Math.round(leisurePercentage)}%</div>
+              <div className="text-white/60">Leisure</div>
+            </div>
+            <div className="text-center">
+              <div className="text-white font-medium">{Math.round(exercisePercentage)}%</div>
+              <div className="text-white/60">Exercise</div>
+            </div>
           </div>
         </div>
 
