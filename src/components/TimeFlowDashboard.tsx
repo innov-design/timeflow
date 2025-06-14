@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ActiveTimer } from './ActiveTimer';
 import { PomodoroTimer } from './PomodoroTimer';
@@ -23,6 +22,7 @@ import { TodoList } from './TodoList';
 import { categorizeActivity, getCategoryColor, getCategoryEmoji } from '@/utils/aiCategorizer';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from 'recharts';
+import { DataVisualization } from './DataVisualization';
 
 export interface Activity {
   id: string;
@@ -317,7 +317,10 @@ export const TimeFlowDashboard = () => {
               </div>
             </div>
 
-            {/* AI Insights Section - Bottom */}
+            {/* Enhanced Data Visualization Section - Bottom */}
+            <DataVisualization activities={activities} />
+
+            {/* Original AI Insights Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Category Breakdown Chart */}
               <Card className="glass-effect border-white/20">
