@@ -29,7 +29,6 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   );
 
   const totalTodayTime = todaysActivities.reduce((sum, activity) => sum + activity.duration, 0);
-  const totalTodayHours = totalTodayTime / 3600;
 
   // 1. Task Completion Rate (25 points)
   const completedTasks = todos.filter(todo => todo.completed).length;
@@ -39,7 +38,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
 
   // 2. Focus Time Quality (20 points)
   const targetDailyHours = 5; // 4-6 hours target
-  const productiveCategories = ['Work', 'Education', 'Learning', 'Programming', 'Study'];
+  const productiveCategories = ['Work', 'Education', 'Learning', 'Programming', 'Study', 'Technical'];
   const focusTime = todaysActivities
     .filter(activity => productiveCategories.some(cat => 
       activity.category.toLowerCase().includes(cat.toLowerCase())
@@ -58,12 +57,16 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
     return acc;
   }, {} as Record<string, number>);
 
-  const totalTime = Object.values(categoryDistribution).reduce((sum: number, time: number) => sum + time, 0);
-  const workPercentage = totalTime > 0 ? ((categoryDistribution['Work'] || 0) / totalTime) * 100 : 0;
-  const leisurePercentage = totalTime > 0 ? ((categoryDistribution['Leisure'] || 0) / totalTime) * 100 : 0;
-  const exercisePercentage = totalTime > 0 ? ((categoryDistribution['Exercise'] || 0) / totalTime) * 100 : 0;
+  const totalTime = Object.values(categoryDistribution).reduce((sum, time) => sum + (time as number), 0);
+  const workTime = (categoryDistribution['Work'] || 0) + (categoryDistribution['Education'] || 0) + (categoryDistribution['Learning'] || 0);
+  const leisureTime = categoryDistribution['Leisure'] || 0;
+  const exerciseTime = (categoryDistribution['Exercise'] || 0) + (categoryDistribution['Fitness'] || 0);
   
-  // Advanced balance scoring based on the formula
+  const workPercentage = totalTime > 0 ? (workTime / totalTime) * 100 : 0;
+  const leisurePercentage = totalTime > 0 ? (leisureTime / totalTime) * 100 : 0;
+  const exercisePercentage = totalTime > 0 ? (exerciseTime / totalTime) * 100 : 0;
+  
+  // Advanced balance scoring
   let balanceScore = 10;
   
   // Work/Education should be 40-50%
@@ -87,6 +90,7 @@ export const ProductivityScoreCard: React.FC<ProductivityScoreCardProps> = ({
   
   // Consistency bonuses (15 max)
   bonusPoints += Math.min(7, streak); // Daily streak
+  const totalTodayHours = totalTodayTime / 3600;
   if (todaysActivities.length > 0 && totalTodayHours > 4) bonusPoints += 3; // Activity consistency
   if (totalTodayHours >= 6 && totalTodayHours <= 10) bonusPoints += 2; // Good daily routine
   
