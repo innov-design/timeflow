@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ActiveTimer } from './ActiveTimer';
 import { PomodoroTimer } from './PomodoroTimer';
@@ -23,6 +24,8 @@ import { categorizeActivity, getCategoryColor, getCategoryEmoji } from '@/utils/
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from 'recharts';
 import { DataVisualization } from './DataVisualization';
+import { ProductivityScoreCard } from './ProductivityScoreCard';
+import { HabitTracker } from './HabitTracker';
 
 export interface Activity {
   id: string;
@@ -58,6 +61,16 @@ interface TodoItem {
   category?: string;
 }
 
+interface Habit {
+  id: string;
+  name: string;
+  target: number;
+  unit: string;
+  completed: boolean;
+  streak: number;
+  lastCompleted?: Date;
+}
+
 export const TimeFlowDashboard = () => {
   const [activities, setActivities] = useLocalStorage<Activity[]>('timeflow-activities', []);
   const [currentView, setCurrentView] = useState<'dashboard' | 'calendar' | 'insights' | 'calculator'>('dashboard');
@@ -68,6 +81,7 @@ export const TimeFlowDashboard = () => {
   const [calendarEvents, setCalendarEvents] = useLocalStorage<CalendarEvent[]>('timeflow-events', []);
   const [categoryGoals, setCategoryGoals] = useLocalStorage<CategoryGoal[]>('timeflow-goals', []);
   const [todos, setTodos] = useLocalStorage<TodoItem[]>('timeflow-todos', []);
+  const [habits, setHabits] = useLocalStorage<Habit[]>('timeflow-habits', []);
   const [timerCount, setTimerCount] = useLocalStorage<number>('timeflow-timer-count', 0);
   const [pomodoroCount, setPomodoroCount] = useLocalStorage<number>('timeflow-pomodoro-count', 0);
   const [focusModeCount, setFocusModeCount] = useLocalStorage<number>('timeflow-focus-count', 0);
@@ -151,6 +165,38 @@ export const TimeFlowDashboard = () => {
     setTodos(prev => prev.filter(todo => todo.id !== id));
   };
 
+  const addHabit = (habit: Omit<Habit, 'id'>) => {
+    const newHabit: Habit = {
+      ...habit,
+      id: Date.now().toString(),
+    };
+    setHabits(prev => [...prev, newHabit]);
+  };
+
+  const toggleHabit = (id: string) => {
+    setHabits(prev => prev.map(habit => {
+      if (habit.id === id) {
+        const today = new Date().toDateString();
+        const lastCompleted = habit.lastCompleted ? new Date(habit.lastCompleted).toDateString() : null;
+        
+        if (lastCompleted === today) {
+          return { ...habit, completed: false, lastCompleted: undefined };
+        } else {
+          const newStreak = lastCompleted === new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString() 
+            ? habit.streak + 1 
+            : 1;
+          return { 
+            ...habit, 
+            completed: true, 
+            lastCompleted: new Date(),
+            streak: newStreak
+          };
+        }
+      }
+      return habit;
+    }));
+  };
+
   const incrementPomodoroCount = () => {
     setPomodoroCount(prev => prev + 1);
   };
@@ -171,7 +217,7 @@ export const TimeFlowDashboard = () => {
     goal.currentMinutes >= Math.floor(goal.weeklyMinutes / 60)
   ).length;
 
-  // Calculate insights data
+  // Calculate insights data for charts
   const categoryData = activities.reduce((acc, activity) => {
     const categories = categorizeActivity(activity.name);
     categories.forEach(category => {
@@ -189,90 +235,68 @@ export const TimeFlowDashboard = () => {
     hours: Math.round(item.value / 3600 * 10) / 10
   }));
 
-  const weeklyData = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dayActivities = activities.filter(activity => 
-      new Date(activity.startTime).toDateString() === date.toDateString()
-    );
-    const totalTime = dayActivities.reduce((sum, activity) => sum + activity.duration, 0);
-    
-    return {
-      day: date.toLocaleDateString('en', { weekday: 'short' }),
-      hours: Math.round(totalTime / 3600 * 10) / 10,
-      activities: dayActivities.length
-    };
-  }).reverse();
-
-  const productivityScore = Math.min(100, Math.round(
-    (totalTimeToday / 3600) * 10 + 
-    timerCount * 5 + 
-    pomodoroCount * 10 + 
-    focusModeCount * 15 + 
-    streak * 2
-  ));
-
   return (
-    <div className="min-h-screen gradient-bg p-4">
-      <div className="w-full max-w-none mx-auto space-y-4">
+    <div className="min-h-screen gradient-bg p-2">
+      <div className="w-full max-w-none mx-auto space-y-2">
         {/* Header */}
-        <Card className="glass-effect p-6">
+        <Card className="glass-effect p-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">TimeFlow</h1>
-              <p className="text-white/80">Your modern time management companion</p>
+              <h1 className="text-2xl font-bold text-white mb-1">TimeFlow</h1>
+              <p className="text-white/80 text-sm">Your modern time management companion</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant={currentView === 'dashboard' ? 'default' : 'secondary'}
                 onClick={() => setCurrentView('dashboard')}
                 className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                size="sm"
               >
-                <Target className="w-4 h-4 mr-2" />
+                <Target className="w-4 h-4 mr-1" />
                 Dashboard
               </Button>
               <Button
                 variant={currentView === 'calendar' ? 'default' : 'secondary'}
                 onClick={() => setCurrentView('calendar')}
                 className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                size="sm"
               >
-                <Calendar className="w-4 h-4 mr-2" />
+                <Calendar className="w-4 h-4 mr-1" />
                 Calendar
               </Button>
               <Button
                 variant={currentView === 'calculator' ? 'default' : 'secondary'}
                 onClick={() => setCurrentView('calculator')}
                 className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                size="sm"
               >
-                <Calculator className="w-4 h-4 mr-2" />
+                <Calculator className="w-4 h-4 mr-1" />
                 Calculator
               </Button>
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-4">
-            <Badge variant="secondary" className="bg-white/20 text-white">
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Badge variant="secondary" className="bg-white/20 text-white text-xs">
               🔥 {streak} day streak
             </Badge>
-            <Badge variant="secondary" className="bg-white/20 text-white">
+            <Badge variant="secondary" className="bg-white/20 text-white text-xs">
               ⏱️ {Math.floor(totalTimeToday / 60)}h {totalTimeToday % 60}m today
             </Badge>
-            <Badge variant="secondary" className="bg-white/20 text-white">
+            <Badge variant="secondary" className="bg-white/20 text-white text-xs">
               📊 {activities.length} total activities
             </Badge>
-            <Badge variant="secondary" className="bg-white/20 text-white">
+            <Badge variant="secondary" className="bg-white/20 text-white text-xs">
               🎯 {completedGoals} goals completed
-            </Badge>
-            <Badge variant="secondary" className="bg-white/20 text-white">
-              📈 {productivityScore}% productivity score
             </Badge>
           </div>
         </Card>
 
         {currentView === 'dashboard' && (
           <>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* Left Column - Timers and Activities */}
-              <div className="space-y-3">
+            {/* Main Dashboard Grid - No gaps, full width utilization */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-2 h-[calc(100vh-200px)]">
+              {/* Column 1 - Timers */}
+              <div className="space-y-2 h-full overflow-y-auto">
                 <ActiveTimer 
                   activities={activities}
                   onAddActivity={addActivity}
@@ -286,8 +310,17 @@ export const TimeFlowDashboard = () => {
                 <CustomTimer />
               </div>
 
-              {/* Center Column - Goals and Todos */}
-              <div className="space-y-3">
+              {/* Column 2 - Goals and Stats */}
+              <div className="space-y-2 h-full overflow-y-auto">
+                <ProductivityScoreCard 
+                  activities={activities}
+                  todos={todos}
+                  habits={habits}
+                  pomodoroCount={pomodoroCount}
+                  focusModeCount={focusModeCount}
+                  streak={streak}
+                />
+                <TodaysStats activities={activities} />
                 <CategoryGoals 
                   activities={activities}
                   goals={categoryGoals}
@@ -300,83 +333,70 @@ export const TimeFlowDashboard = () => {
                   onToggleTodo={toggleTodo}
                   onDeleteTodo={deleteTodo}
                 />
-                {/* Category Breakdown Chart - Moved here */}
+              </div>
+
+              {/* Column 3 - Habits and Focus */}
+              <div className="space-y-2 h-full overflow-y-auto">
+                <HabitTracker 
+                  habits={habits}
+                  onAddHabit={addHabit}
+                  onToggleHabit={toggleHabit}
+                />
+                <StreakCounter streak={streak} />
+                <FocusMode onActivate={incrementFocusCount} />
+                
+                {/* Category Breakdown Chart - Compact */}
                 <Card className="glass-effect border-white/20">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5" />
-                      Category Breakdown
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-white flex items-center gap-2 text-sm">
+                      <BarChart3 className="w-4 h-4" />
+                      Categories
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     {chartData.length > 0 ? (
-                      <ChartContainer config={{}} className="h-[200px]">
+                      <ChartContainer config={{}} className="h-[150px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={chartData}>
                             <XAxis 
                               dataKey="name" 
-                              tick={{ fill: '#fff', fontSize: 10 }}
+                              tick={{ fill: '#fff', fontSize: 8 }}
                               angle={-45}
                               textAnchor="end"
-                              height={60}
+                              height={40}
                             />
-                            <YAxis tick={{ fill: '#fff', fontSize: 10 }} />
+                            <YAxis tick={{ fill: '#fff', fontSize: 8 }} />
                             <ChartTooltip content={<ChartTooltipContent />} />
                             <Bar dataKey="hours" fill="#8884d8" />
                           </BarChart>
                         </ResponsiveContainer>
                       </ChartContainer>
                     ) : (
-                      <div className="text-white/60 text-center py-8">
-                        No data available yet. Start tracking activities!
+                      <div className="text-white/60 text-center py-4 text-xs">
+                        Start tracking activities!
                       </div>
                     )}
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Right Column - Stats and Focus */}
-              <div className="space-y-3">
-                <TodaysStats activities={activities} />
-                <StreakCounter streak={streak} />
-                <FocusMode onActivate={incrementFocusCount} />
+              {/* Column 4 - Gamification */}
+              <div className="space-y-2 h-full overflow-y-auto">
                 <GamificationStats 
                   timerCount={timerCount}
                   pomodoroCount={pomodoroCount}
                   focusModeCount={focusModeCount}
                   goalsCompleted={completedGoals}
                   streak={streak}
-                  productivityScore={productivityScore}
+                  productivityScore={0}
                   totalTimeToday={totalTimeToday}
                   activities={activities}
                 />
               </div>
             </div>
 
-            {/* Enhanced Data Visualization Section - Bottom */}
+            {/* Data Visualization - Bottom section, full width */}
             <DataVisualization activities={activities} />
-
-            {/* Weekly Progress - Bottom */}
-            <Card className="glass-effect border-white/20">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  Weekly Progress
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={{}} className="h-[200px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={weeklyData}>
-                      <XAxis dataKey="day" tick={{ fill: '#fff', fontSize: 12 }} />
-                      <YAxis tick={{ fill: '#fff', fontSize: 12 }} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line type="monotone" dataKey="hours" stroke="#8884d8" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </CardContent>
-            </Card>
           </>
         )}
 
