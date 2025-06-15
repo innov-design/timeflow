@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
-import { Clock, Play, Pause, Plus } from 'lucide-react';
+import { Clock, Plus } from 'lucide-react';
 import { Activity } from './TimeFlowDashboard';
 import { categorizeActivity } from '@/utils/aiCategorizer';
 
@@ -21,6 +21,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
   const [startTime, setStartTime] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [pastDuration, setPastDuration] = useState(30);
+  const [pastStartTime, setPastStartTime] = useState('');
   const [showPastActivityForm, setShowPastActivityForm] = useState(false);
 
   useEffect(() => {
@@ -32,6 +33,13 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
     }
     return () => clearInterval(interval);
   }, [isRunning, startTime]);
+
+  useEffect(() => {
+    // Set default past start time to current time minus duration
+    const now = new Date();
+    const defaultStart = new Date(now.getTime() - pastDuration * 60 * 1000);
+    setPastStartTime(defaultStart.toISOString().slice(0, 16));
+  }, [pastDuration]);
 
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -64,12 +72,15 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
     const categories = categorizeActivity(activityName);
     const primaryCategory = categories[0] || 'Other';
     
+    const startDate = new Date(pastStartTime);
+    const endDate = new Date(startDate.getTime() + pastDuration * 60 * 1000);
+    
     const activity: Omit<Activity, 'id'> = {
       name: activityName,
       description: activityDescription,
       duration: pastDuration * 60,
-      startTime: new Date(Date.now() - pastDuration * 60 * 1000),
-      endTime: new Date(),
+      startTime: startDate,
+      endTime: endDate,
       category: primaryCategory,
       isActive: false
     };
@@ -121,10 +132,9 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
             <div className="text-white/80">
               {activeActivity.name}
             </div>
-            <Progress value={66} />
             <Button 
               onClick={handleStopTimer}
-              className="w-full bg-red-500 hover:bg-red-600 text-white"
+              className="w-full bg-red-500 hover:bg-red-600 text-white mt-4"
             >
               Stop Timer
             </Button>
@@ -179,6 +189,15 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
               className="bg-white/10 border-white/30 text-white placeholder:text-white/60 resize-none"
               rows={3}
             />
+            <div className="space-y-2">
+              <label className="text-white/80 text-sm">Start Time</label>
+              <Input
+                type="datetime-local"
+                value={pastStartTime}
+                onChange={(e) => setPastStartTime(e.target.value)}
+                className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
+              />
+            </div>
             <Input
               type="number"
               placeholder="Duration (minutes)"

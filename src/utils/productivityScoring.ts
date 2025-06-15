@@ -1,4 +1,3 @@
-
 // AI-driven productivity scoring for activities
 export const getActivityProductivityScore = (activityName: string): number => {
   const activity = activityName.toLowerCase();
@@ -93,66 +92,120 @@ export const calculateProductivityScore = (
   pomodoroCount: number,
   focusModeCount: number,
   streak: number
-): ProductivityScoreData => {
+) => {
+  // Task Completion Score (0-25 points)
+  const completedTodos = todos.filter(todo => todo.completed).length;
+  const totalTodos = todos.length;
+  const taskScore = totalTodos > 0 ? Math.min((completedTodos / totalTodos) * 25, 25) : 0;
+
+  // Habit Completion Score (0-20 points)
+  const completedHabits = habits.filter(habit => habit.completed).length;
+  const totalHabits = habits.length;
+  const habitScore = totalHabits > 0 ? Math.min((completedHabits / totalHabits) * 20, 20) : 0;
+
+  // Activity Quality Score (0-30 points)
   const today = new Date().toDateString();
-  const todaysActivities = activities.filter(activity => 
+  const todayActivities = activities.filter(activity => 
     new Date(activity.startTime).toDateString() === today
   );
 
-  // Reset all scores to 0
-  const completedTasks = 0;
-  const totalTasks = todos.length;
-  const taskScore = 0;
-  const aiProductivityScore = 0;
-  const focusTime = 0;
-  const focusScore = 0;
-  const averageProductivity = 0;
-
-  // Category Balance calculation
-  const categoryDistribution = todaysActivities.reduce((acc, activity) => {
-    acc[activity.category] = (acc[activity.category] || 0) + activity.duration;
+  const totalTimeToday = todayActivities.reduce((sum, activity) => sum + (activity.duration || 0), 0);
+  const categoryDistribution = todayActivities.reduce((acc, activity) => {
+    const category = activity.category || 'Other';
+    acc[category] = (acc[category] || 0) + (activity.duration || 0);
     return acc;
   }, {} as Record<string, number>);
 
-  const totalTime = Object.values(categoryDistribution).reduce((sum, time) => sum + Number(time), 0);
-  const workTime = Number(categoryDistribution['Work'] || 0) + 
-                   Number(categoryDistribution['Education'] || 0) + 
-                   Number(categoryDistribution['Learning'] || 0);
-  const leisureTime = Number(categoryDistribution['Leisure'] || 0);
-  const exerciseTime = Number(categoryDistribution['Exercise'] || 0) + 
-                       Number(categoryDistribution['Fitness'] || 0);
-  
-  const workPercentage = totalTime > 0 ? (workTime / totalTime) * 100 : 0;
-  const leisurePercentage = totalTime > 0 ? (leisureTime / totalTime) * 100 : 0;
-  const exercisePercentage = totalTime > 0 ? (exerciseTime / totalTime) * 100 : 0;
-  
-  let balanceScore = 10;
-  
-  if (workPercentage < 40) balanceScore -= Math.floor((40 - workPercentage) / 5);
-  if (workPercentage > 50) balanceScore -= Math.floor((workPercentage - 50) / 5);
-  if (leisurePercentage < 15) balanceScore -= Math.floor((15 - leisurePercentage) / 5);
-  if (leisurePercentage > 25) balanceScore -= Math.floor((leisurePercentage - 25) / 5);
-  if (exercisePercentage < 8) balanceScore -= Math.floor((8 - exercisePercentage) / 5);
-  
-  balanceScore = Math.max(0, balanceScore);
+  // Calculate weighted activity score
+  let weightedScore = 0;
+  Object.entries(categoryDistribution).forEach(([category, duration]) => {
+    const weight = getCategoryWeight(category);
+    const typedDuration = Number(duration);
+    weightedScore += typedDuration * weight;
+  });
 
-  const baseScore = 0;
-  const bonusPoints = 0;
-  const penalties = 0;
-  const finalScore = 0;
+  const activityScore = totalTimeToday > 0 ? Math.min((weightedScore / totalTimeToday) * 30, 30) : 0;
+
+  // Focus Time Score (0-15 points)
+  const focusActivities = ['Work', 'Study', 'Learning', 'Deep Work'];
+  const focusTime = Object.entries(categoryDistribution)
+    .filter(([category]) => focusActivities.includes(category))
+    .reduce((sum, [, duration]) => {
+      const typedDuration = Number(duration);
+      return sum + typedDuration;
+    }, 0);
+
+  const focusScore = Math.min((focusTime / 3600) * 15, 15); // 1 hour = max points
+
+  // Bonus Points (0-10 points)
+  const pomodoroBonus = Math.min(pomodoroCount * 2, 6);
+  const focusModeBonus = Math.min(focusModeCount * 1, 4);
+  const bonusScore = pomodoroBonus + focusModeBonus;
+
+  // Calculate base score
+  const baseScore = taskScore + habitScore + activityScore + focusScore + bonusScore;
+
+  // Streak multiplier (1.0 to 1.1)
+  const streakMultiplier = Math.min(1 + (streak * 0.01), 1.1);
+
+  // Penalties
+  let penalties = 0;
+  
+  // Productivity category distribution analysis
+  const productiveTime = (Number(categoryDistribution['Work']) || 0) + 
+                         (Number(categoryDistribution['Study']) || 0) + 
+                         (Number(categoryDistribution['Learning']) || 0);
+  const leisureTime = (Number(categoryDistribution['Entertainment']) || 0) + 
+                     (Number(categoryDistribution['Gaming']) || 0) + 
+                     (Number(categoryDistribution['Social Media']) || 0);
+  const personalTime = Number(categoryDistribution['Personal']) || 0;
+
+  // Apply penalties for poor time distribution
+  if (leisureTime > 0 && productiveTime > 0) {
+    const leisureRatio = leisureTime / totalTimeToday;
+    if (leisureRatio > 0.5) penalties += 10; // Too much leisure time
+  }
+
+  // Final score calculation
+  const finalScore = Math.max(Math.min(baseScore * streakMultiplier - penalties, 100), 0);
 
   return {
-    taskScore,
-    aiProductivityScore,
-    focusScore,
-    balanceScore,
-    baseScore,
-    bonusPoints,
-    penalties,
     finalScore,
-    averageProductivity,
-    focusTime,
-    completedTasks,
-    totalTasks
+    taskScore,
+    habitScore,
+    activityScore,
+    focusScore,
+    bonusScore,
+    streakMultiplier,
+    penalties,
+    baseScore,
+    breakdown: {
+      tasks: { completed: completedTodos, total: totalTodos },
+      habits: { completed: completedHabits, total: totalHabits },
+      activities: { total: todayActivities.length, totalTime: totalTimeToday },
+      focus: { time: focusTime, activities: focusActivities.length },
+      bonus: { pomodoro: pomodoroCount, focusMode: focusModeCount }
+    }
   };
+};
+
+export const getCategoryWeight = (category: string): number => {
+  switch (category) {
+    case 'Work':
+    case 'Study':
+    case 'Learning':
+      return 1.5;
+    case 'Exercise':
+    case 'Fitness':
+      return 1.2;
+    case 'Leisure':
+    case 'Entertainment':
+    case 'Gaming':
+    case 'Social Media':
+      return 0.8;
+    case 'Personal':
+      return 0.5;
+    default:
+      return 1;
+  }
 };
