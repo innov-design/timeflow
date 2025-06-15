@@ -13,7 +13,7 @@ export const categorizeActivity = (activityName: string): string[] => {
     categories.push('Technical Education');
   }
   
-  // Learning & Skills - NEW CATEGORY
+  // Learning & Skills
   if (activity.includes('learning') || activity.includes('language') || 
       activity.includes('math') || activity.includes('violin') || 
       activity.includes('piano') || activity.includes('music practice') ||
@@ -30,7 +30,7 @@ export const categorizeActivity = (activityName: string): string[] => {
     categories.push('Learning & Skills');
   }
   
-  // Business - NEW CATEGORY
+  // Business
   if (activity.includes('dropshipping') || activity.includes('saas') || 
       activity.includes('affiliate marketing') || activity.includes('business') ||
       activity.includes('entrepreneurship') || activity.includes('startup') ||
@@ -45,14 +45,27 @@ export const categorizeActivity = (activityName: string): string[] => {
     categories.push('Business');
   }
   
+  // Browsing - NEW CATEGORY
+  if (activity.includes('browsing') || activity.includes('shopping online') || 
+      activity.includes('youtube') || activity.includes('watching youtube') ||
+      activity.includes('finding travel') || activity.includes('online shopping') ||
+      activity.includes('web browsing') || activity.includes('surfing') ||
+      activity.includes('looking up') || activity.includes('searching') ||
+      activity.includes('researching travel') || activity.includes('travel planning') ||
+      activity.includes('window shopping') || activity.includes('browsing web') ||
+      activity.includes('internet browsing') || activity.includes('online research') ||
+      activity.includes('looking for') || activity.includes('checking out')) {
+    categories.push('Browsing');
+  }
+  
   // Leisure
-  if (activity.includes('cricket') && activity.includes('house') ||
-      activity.includes('chilling') || activity.includes('break') ||
+  if (activity.includes('chilling') || activity.includes('break') ||
       activity.includes('rest') || activity.includes('relax') ||
       activity.includes('entertainment') || activity.includes('game') || 
       activity.includes('tv') || activity.includes('movie') || 
       activity.includes('music') || activity.includes('social media') ||
-      activity.includes('leisure') || activity.includes('free time')) {
+      activity.includes('leisure') || activity.includes('free time') ||
+      activity.includes('cricket') || activity.includes('table tennis')) {
     categories.push('Leisure');
   }
   
@@ -90,8 +103,11 @@ export const categorizeActivity = (activityName: string): string[] => {
       activity.includes('together') || activity.includes('visit') ||
       (activity.includes('walking') && activity.includes('family')) ||
       (activity.includes('tennis') && activity.includes('family')) ||
+      (activity.includes('table tennis') && activity.includes('family')) ||
+      (activity.includes('cricket') && activity.includes('family')) ||
       (activity.includes('tv') && activity.includes('family')) ||
-      (activity.includes('games') && activity.includes('family'))) {
+      (activity.includes('games') && activity.includes('family')) ||
+      (activity.includes('travel') && activity.includes('family'))) {
     categories.push('Time with Family');
   }
   
@@ -108,8 +124,9 @@ export const getCategoryColor = (category: string): string => {
     case 'Technical Education': return '#3B82F6'; // Blue
     case 'Learning & Skills': return '#10B981'; // Green
     case 'Business': return '#F59E0B'; // Orange
+    case 'Browsing': return '#8B5CF6'; // Purple
     case 'Fitness': return '#EF4444'; // Red
-    case 'Leisure': return '#8B5CF6'; // Purple
+    case 'Leisure': return '#6366F1'; // Indigo
     case 'Eating': return '#F97316'; // Orange
     case 'Time with Family': return '#EC4899'; // Pink
     default: return '#6B7280'; // Gray
@@ -121,6 +138,7 @@ export const getCategoryEmoji = (category: string): string => {
     case 'Technical Education': return '💻';
     case 'Learning & Skills': return '📚';
     case 'Business': return '💼';
+    case 'Browsing': return '🌐';
     case 'Fitness': return '💪';
     case 'Leisure': return '😌';
     case 'Eating': return '🍽️';

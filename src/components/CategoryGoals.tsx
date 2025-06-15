@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Target, Plus, Edit3 } from 'lucide-react';
 import { Activity } from './TimeFlowDashboard';
-import { getCategoryColor, getCategoryEmoji } from '@/utils/aiCategorizer';
+import { getCategoryColor, getCategoryEmoji, categorizeActivity } from '@/utils/aiCategorizer';
 
 interface CategoryGoal {
   id: string;
@@ -23,11 +24,14 @@ interface CategoryGoalsProps {
 }
 
 const categories = [
-  'Learning and Education',
-  'Physical Activity', 
+  'Technical Education',
+  'Learning & Skills',
+  'Business', 
+  'Browsing',
+  'Fitness',
+  'Leisure',
   'Eating',
-  'Time with Family',
-  'Break Time'
+  'Time with Family'
 ];
 
 export const CategoryGoals: React.FC<CategoryGoalsProps> = ({
@@ -53,10 +57,17 @@ export const CategoryGoals: React.FC<CategoryGoalsProps> = ({
     const weekStart = getWeekStart();
     const weekActivities = activities.filter(activity => {
       const activityDate = new Date(activity.startTime);
-      return activityDate >= weekStart && activity.category === category;
+      return activityDate >= weekStart;
     });
     
-    return weekActivities.reduce((total, activity) => total + activity.duration, 0);
+    // Calculate total time for activities that belong to this category
+    return weekActivities.reduce((total, activity) => {
+      const activityCategories = categorizeActivity(activity.name);
+      if (activityCategories.includes(category)) {
+        return total + activity.duration;
+      }
+      return total;
+    }, 0);
   };
 
   const handleAddGoal = () => {
