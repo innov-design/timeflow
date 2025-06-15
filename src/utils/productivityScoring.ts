@@ -1,3 +1,4 @@
+
 // AI-driven productivity scoring for activities
 export const getActivityProductivityScore = (activityName: string): number => {
   const activity = activityName.toLowerCase();
@@ -72,17 +73,21 @@ export const getScoreLabel = (score: number): string => {
 
 export interface ProductivityScoreData {
   taskScore: number;
-  aiProductivityScore: number;
+  habitScore: number;
+  activityScore: number;
   focusScore: number;
-  balanceScore: number;
-  baseScore: number;
-  bonusPoints: number;
+  bonusScore: number;
+  streakMultiplier: number;
   penalties: number;
+  baseScore: number;
   finalScore: number;
-  averageProductivity: number;
-  focusTime: number;
-  completedTasks: number;
-  totalTasks: number;
+  breakdown: {
+    tasks: { completed: number; total: number };
+    habits: { completed: number; total: number };
+    activities: { total: number; totalTime: number };
+    focus: { time: number; activities: number };
+    bonus: { pomodoro: number; focusMode: number };
+  };
 }
 
 export const calculateProductivityScore = (
@@ -158,7 +163,6 @@ export const calculateProductivityScore = (
   const leisureTime = (Number(categoryDistribution['Entertainment']) || 0) + 
                      (Number(categoryDistribution['Gaming']) || 0) + 
                      (Number(categoryDistribution['Social Media']) || 0);
-  const personalTime = Number(categoryDistribution['Personal']) || 0;
 
   // Apply penalties for poor time distribution
   if (leisureTime > 0 && productiveTime > 0) {

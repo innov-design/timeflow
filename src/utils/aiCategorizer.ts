@@ -7,14 +7,42 @@ export const categorizeActivity = (activityName: string): string[] => {
   if (activity.includes('codecademy') || activity.includes('coding course') || 
       activity.includes('coding project') || activity.includes('react') || 
       activity.includes('javascript') || activity.includes('coding') ||
-      activity.includes('robotics') || activity.includes('math') ||
-      activity.includes('arduino') || activity.includes('programming') ||
-      activity.includes('study') || activity.includes('learn') || activity.includes('course') ||
-      activity.includes('read') || activity.includes('research') || activity.includes('tutorial') ||
-      activity.includes('practice') || activity.includes('training') || activity.includes('skill') ||
-      activity.includes('book') || activity.includes('homework') || activity.includes('exam') ||
+      activity.includes('robotics') || activity.includes('arduino') || 
+      activity.includes('programming') || activity.includes('tutorial') ||
       activity.includes('class') || activity.includes('lecture') || activity.includes('workshop')) {
     categories.push('Technical Education');
+  }
+  
+  // Learning & Skills - NEW CATEGORY
+  if (activity.includes('learning') || activity.includes('language') || 
+      activity.includes('math') || activity.includes('violin') || 
+      activity.includes('piano') || activity.includes('music practice') ||
+      activity.includes('skill building') || activity.includes('practicing') ||
+      activity.includes('study') || activity.includes('learn') || 
+      activity.includes('course') || activity.includes('read') || 
+      activity.includes('research') || activity.includes('practice') || 
+      activity.includes('training') || activity.includes('skill') ||
+      activity.includes('book') || activity.includes('homework') || 
+      activity.includes('exam') || activity.includes('spanish') ||
+      activity.includes('french') || activity.includes('german') ||
+      activity.includes('chinese') || activity.includes('japanese') ||
+      activity.includes('duolingo') || activity.includes('language learning')) {
+    categories.push('Learning & Skills');
+  }
+  
+  // Business - NEW CATEGORY
+  if (activity.includes('dropshipping') || activity.includes('saas') || 
+      activity.includes('affiliate marketing') || activity.includes('business') ||
+      activity.includes('entrepreneurship') || activity.includes('startup') ||
+      activity.includes('marketing') || activity.includes('sales') ||
+      activity.includes('money making') || activity.includes('investing') ||
+      activity.includes('trading') || activity.includes('freelancing') ||
+      activity.includes('consulting') || activity.includes('e-commerce') ||
+      activity.includes('online business') || activity.includes('side hustle') ||
+      activity.includes('passive income') || activity.includes('networking') ||
+      activity.includes('client work') || activity.includes('proposal') ||
+      activity.includes('business plan') || activity.includes('market research')) {
+    categories.push('Business');
   }
   
   // Leisure
@@ -78,10 +106,12 @@ export const categorizeActivity = (activityName: string): string[] => {
 export const getCategoryColor = (category: string): string => {
   switch (category) {
     case 'Technical Education': return '#3B82F6'; // Blue
-    case 'Fitness': return '#10B981'; // Green
+    case 'Learning & Skills': return '#10B981'; // Green
+    case 'Business': return '#F59E0B'; // Orange
+    case 'Fitness': return '#EF4444'; // Red
     case 'Leisure': return '#8B5CF6'; // Purple
-    case 'Eating': return '#F59E0B'; // Orange
-    case 'Time with Family': return '#EF4444'; // Red
+    case 'Eating': return '#F97316'; // Orange
+    case 'Time with Family': return '#EC4899'; // Pink
     default: return '#6B7280'; // Gray
   }
 };
@@ -89,6 +119,8 @@ export const getCategoryColor = (category: string): string => {
 export const getCategoryEmoji = (category: string): string => {
   switch (category) {
     case 'Technical Education': return '💻';
+    case 'Learning & Skills': return '📚';
+    case 'Business': return '💼';
     case 'Fitness': return '💪';
     case 'Leisure': return '😌';
     case 'Eating': return '🍽️';
