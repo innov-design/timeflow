@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Clock, Plus } from 'lucide-react';
 import { Activity } from './TimeFlowDashboard';
-import { categorizeActivity } from '@/utils/aiCategorizer';
+import { categorizeActivity, getCategoryEmoji } from '@/utils/aiCategorizer';
 
 interface ActiveTimerProps {
   activities: Activity[];
@@ -14,9 +15,22 @@ interface ActiveTimerProps {
   onUpdateActivity: (id: string, updates: Partial<Activity>) => void;
 }
 
+const categories = [
+  'Technical Education',
+  'Learning & Skills',
+  'Business', 
+  'Browsing',
+  'Fitness',
+  'Leisure',
+  'Eating',
+  'Time with Family',
+  'Other'
+];
+
 export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActivity, onUpdateActivity }) => {
   const [activityName, setActivityName] = useState('');
   const [activityDescription, setActivityDescription] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -41,6 +55,16 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
     setPastStartTime(defaultStart.toISOString().slice(0, 16));
   }, [pastDuration]);
 
+  // Auto-suggest category based on activity name
+  useEffect(() => {
+    if (activityName && !selectedCategory) {
+      const suggestedCategories = categorizeActivity(activityName);
+      if (suggestedCategories.length > 0) {
+        setSelectedCategory(suggestedCategories[0]);
+      }
+    }
+  }, [activityName, selectedCategory]);
+
   const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const hours = Math.floor(totalSeconds / 3600);
@@ -64,13 +88,13 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
     }
     setActivityName('');
     setActivityDescription('');
+    setSelectedCategory('');
   };
 
   const handleAddPastActivity = () => {
     if (!activityName.trim()) return;
     
-    const categories = categorizeActivity(activityName);
-    const primaryCategory = categories[0] || 'Other';
+    const finalCategory = selectedCategory || categorizeActivity(activityName)[0] || 'Other';
     
     const startDate = new Date(pastStartTime);
     const endDate = new Date(startDate.getTime() + pastDuration * 60 * 1000);
@@ -81,13 +105,14 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
       duration: pastDuration * 60,
       startTime: startDate,
       endTime: endDate,
-      category: primaryCategory,
+      category: finalCategory,
       isActive: false
     };
     
     onAddActivity(activity);
     setActivityName('');
     setActivityDescription('');
+    setSelectedCategory('');
     setPastDuration(30);
     setShowPastActivityForm(false);
   };
@@ -95,15 +120,14 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
   const startTimer = () => {
     if (!activityName.trim()) return;
     
-    const categories = categorizeActivity(activityName);
-    const primaryCategory = categories[0] || 'Other';
+    const finalCategory = selectedCategory || categorizeActivity(activityName)[0] || 'Other';
     
     const activity: Omit<Activity, 'id'> = {
       name: activityName,
       description: activityDescription,
       duration: 0,
       startTime: new Date(),
-      category: primaryCategory,
+      category: finalCategory,
       isActive: true
     };
     
@@ -148,6 +172,18 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
               onChange={(e) => setActivityName(e.target.value)}
               className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
             />
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="bg-white/10 border-white/30 text-white">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category} className="bg-gray-800">
+                    {getCategoryEmoji(category)} {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Textarea
               placeholder="Activity description (optional)"
               value={activityDescription}
@@ -182,6 +218,18 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
               onChange={(e) => setActivityName(e.target.value)}
               className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
             />
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="bg-white/10 border-white/30 text-white">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category} className="bg-gray-800">
+                    {getCategoryEmoji(category)} {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Textarea
               placeholder="Activity description (optional)"
               value={activityDescription}

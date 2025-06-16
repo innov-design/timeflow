@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ActiveTimer } from './ActiveTimer';
 import { PomodoroTimer } from './PomodoroTimer';
@@ -19,6 +20,7 @@ import { EnhancedCalendar } from './EnhancedCalendar';
 import { CategoryGoals } from './CategoryGoals';
 import { GamificationStats } from './GamificationStats';
 import { TodoList } from './TodoList';
+import { CategoryDistribution } from './CategoryDistribution';
 import { categorizeActivity, getCategoryColor, getCategoryEmoji } from '@/utils/aiCategorizer';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, ResponsiveContainer } from 'recharts';
