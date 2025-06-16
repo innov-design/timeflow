@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ActiveTimer } from './ActiveTimer';
 import { PomodoroTimer } from './PomodoroTimer';
@@ -314,8 +313,8 @@ export const TimeFlowDashboard = () => {
 
         {currentView === 'dashboard' && (
           <>
-            {/* Improved Grid Layout - Proper alignment and spacing */}
-            <div className="grid grid-cols-12 gap-2 h-[calc(100vh-200px)]">
+            {/* Improved Grid Layout - Optimized for high resolution */}
+            <div className="grid grid-cols-12 gap-2 h-[calc(100vh-180px)]">
               {/* Column 1 - Timers (3 columns width) */}
               <div className="col-span-12 lg:col-span-3 space-y-2 h-full overflow-y-auto">
                 <ActiveTimer 
@@ -342,6 +341,7 @@ export const TimeFlowDashboard = () => {
                   streak={streak}
                   onResetScore={resetProductivityScore}
                 />
+                <CategoryDistribution activities={activities} />
                 <TodaysStats activities={activities} />
                 <CategoryGoals 
                   activities={activities}
@@ -416,8 +416,8 @@ export const TimeFlowDashboard = () => {
                   activities={activities}
                 />
                 
-                {/* Calendar View - Fills the unused space */}
-                <div className="h-[400px]">
+                {/* Calendar View - Optimized height */}
+                <div className="h-[350px]">
                   <CalendarView activities={activities} />
                 </div>
               </div>
