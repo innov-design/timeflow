@@ -27,6 +27,8 @@ import { DataVisualization } from './DataVisualization';
 import { ProductivityScoreCard } from './ProductivityScoreCard';
 import { HabitTracker } from './HabitTracker';
 import { calculateProductivityScore } from '@/utils/productivityScoring';
+import { HealthScoreCard } from './HealthScoreCard';
+import { HealthCounters } from '@/utils/healthScoring';
 
 export interface Activity {
   id: string;
@@ -86,6 +88,16 @@ export const TimeFlowDashboard = () => {
   const [timerCount, setTimerCount] = useLocalStorage<number>('timeflow-timer-count', 0);
   const [pomodoroCount, setPomodoroCount] = useLocalStorage<number>('timeflow-pomodoro-count', 0);
   const [focusModeCount, setFocusModeCount] = useLocalStorage<number>('timeflow-focus-count', 0);
+  
+  // Add health counters state
+  const [healthCounters, setHealthCounters] = useLocalStorage<HealthCounters>('timeflow-health-counters', {
+    water: 0,
+    meals: 0,
+    fruitsVeggies: 0
+  });
+
+  // Add data version for persistence management
+  const [dataVersion, setDataVersion] = useLocalStorage<number>('timeflow-data-version', 1);
 
   useEffect(() => {
     const today = new Date().toDateString();
@@ -216,6 +228,8 @@ export const TimeFlowDashboard = () => {
       streak: 0, 
       lastCompleted: undefined 
     })));
+    // Reset health counters too
+    setHealthCounters({ water: 0, meals: 0, fruitsVeggies: 0 });
   };
 
   const incrementPomodoroCount = () => {
@@ -250,14 +264,12 @@ export const TimeFlowDashboard = () => {
 
   // Calculate insights data for charts
   const categoryData = activities.reduce((acc, activity) => {
-    const categories = categorizeActivity(activity.name);
-    categories.forEach(category => {
-      if (!acc[category]) {
-        acc[category] = { name: category, value: 0, activities: 0 };
-      }
-      acc[category].value += activity.duration;
-      acc[category].activities += 1;
-    });
+    const category = activity.category || 'Other'; // Use single category
+    if (!acc[category]) {
+      acc[category] = { name: category, value: 0, activities: 0 };
+    }
+    acc[category].value += activity.duration;
+    acc[category].activities += 1;
     return acc;
   }, {} as Record<string, { name: string; value: number; activities: number }>);
 
@@ -365,8 +377,17 @@ export const TimeFlowDashboard = () => {
                   streak={streak}
                   onResetScore={resetProductivityScore}
                 />
+                <HealthScoreCard 
+                  activities={activities}
+                  healthCounters={healthCounters}
+                  onUpdateCounters={setHealthCounters}
+                />
                 <CategoryDistribution activities={activities} />
                 <TodaysStats activities={activities} />
+              </div>
+
+              {/* Column 3 - Habits & Focus (3 columns width) */}
+              <div className="col-span-12 lg:col-span-3 space-y-2 h-full overflow-y-auto">
                 <CategoryGoals 
                   activities={activities}
                   goals={categoryGoals}
@@ -379,10 +400,6 @@ export const TimeFlowDashboard = () => {
                   onToggleTodo={toggleTodo}
                   onDeleteTodo={deleteTodo}
                 />
-              </div>
-
-              {/* Column 3 - Habits & Focus (3 columns width) */}
-              <div className="col-span-12 lg:col-span-3 space-y-2 h-full overflow-y-auto">
                 <HabitTracker 
                   habits={habits}
                   onAddHabit={addHabit}
@@ -390,6 +407,10 @@ export const TimeFlowDashboard = () => {
                   onDeleteHabit={deleteHabit}
                 />
                 <StreakCounter streak={streak} />
+              </div>
+
+              {/* Column 4 - Gamification & Calendar (3 columns width) */}
+              <div className="col-span-12 lg:col-span-3 space-y-2 h-full overflow-y-auto">
                 <FocusMode onActivate={incrementFocusCount} />
                 
                 {/* Category Breakdown Chart */}
@@ -425,17 +446,14 @@ export const TimeFlowDashboard = () => {
                     )}
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Column 4 - Gamification & Calendar (3 columns width) */}
-              <div className="col-span-12 lg:col-span-3 space-y-2 h-full overflow-y-auto">
                 <GamificationStats 
                   timerCount={timerCount}
                   pomodoroCount={pomodoroCount}
                   focusModeCount={focusModeCount}
                   goalsCompleted={completedGoals}
                   streak={streak}
-                  productivityScore={0}
+                  productivityScore={productivityScoreData.finalScore}
                   totalTimeToday={totalTimeToday}
                   activities={activities}
                 />
@@ -452,7 +470,8 @@ export const TimeFlowDashboard = () => {
           </>
         )}
 
-        {currentView === 'calendar' && (
+        {
+        currentView === 'calendar' && (
           <EnhancedCalendar 
             activities={activities}
             events={calendarEvents}

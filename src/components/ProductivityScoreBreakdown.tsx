@@ -20,19 +20,19 @@ export const ProductivityScoreBreakdown: React.FC<ProductivityScoreBreakdownProp
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="flex justify-between">
             <span className="text-white/70">Tasks</span>
-            <span className="text-white">{Math.round(scoreData.taskScore)}/25</span>
+            <span className="text-white">{Math.round(scoreData.taskScore)}/30</span>
           </div>
           <div className="flex justify-between">
             <span className="text-white/70">Habits</span>
-            <span className="text-white">{Math.round(scoreData.habitScore)}/20</span>
+            <span className="text-white">{Math.round(scoreData.habitScore)}/25</span>
           </div>
           <div className="flex justify-between">
             <span className="text-white/70">Activities</span>
-            <span className="text-white">{Math.round(scoreData.activityScore)}/30</span>
+            <span className="text-white">{Math.round(scoreData.activityScore)}/35</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-white/70">Focus</span>
-            <span className="text-white">{Math.round(scoreData.focusScore)}/15</span>
+            <span className="text-white/70">Bonus</span>
+            <span className="text-white">{Math.round(scoreData.bonusScore)}/10</span>
           </div>
         </div>
       </div>
@@ -45,7 +45,7 @@ export const ProductivityScoreBreakdown: React.FC<ProductivityScoreBreakdownProp
         <div className="flex flex-wrap gap-1">
           {streak > 0 && (
             <Badge variant="secondary" className="bg-green-500/20 text-green-300 text-xs">
-              🔥 Streak +{Math.min(7, streak)}
+              🔥 Streak +{Math.round((scoreData.streakMultiplier - 1) * 100)}%
             </Badge>
           )}
         </div>
@@ -54,8 +54,8 @@ export const ProductivityScoreBreakdown: React.FC<ProductivityScoreBreakdownProp
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div className="text-center">
-          <div className="text-white font-medium">{Math.round(scoreData.breakdown.focus.time / 3600 * 10) / 10}h</div>
-          <div className="text-white/60">Focus Time</div>
+          <div className="text-white font-medium">{Math.round(scoreData.breakdown.activities.totalTime / 3600 * 10) / 10}h</div>
+          <div className="text-white/60">Active Time</div>
         </div>
         <div className="text-center">
           <div className="text-white font-medium">{scoreData.breakdown.tasks.completed}/{scoreData.breakdown.tasks.total}</div>

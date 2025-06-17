@@ -1,4 +1,3 @@
-
 // AI-driven productivity scoring for activities
 export const getActivityProductivityScore = (activityName: string): number => {
   const activity = activityName.toLowerCase();
@@ -113,17 +112,17 @@ export const calculateProductivityScore = (
   focusModeCount: number,
   streak: number
 ) => {
-  // Task Completion Score (0-25 points)
+  // Task Completion Score (0-30 points) - increased from 25
   const completedTodos = todos.filter(todo => todo.completed).length;
   const totalTodos = todos.length;
-  const taskScore = totalTodos > 0 ? Math.min((completedTodos / totalTodos) * 25, 25) : 0;
+  const taskScore = totalTodos > 0 ? Math.min((completedTodos / totalTodos) * 30, 30) : 0;
 
-  // Habit Completion Score (0-20 points)
+  // Habit Completion Score (0-25 points)
   const completedHabits = habits.filter(habit => habit.completed).length;
   const totalHabits = habits.length;
-  const habitScore = totalHabits > 0 ? Math.min((completedHabits / totalHabits) * 20, 20) : 0;
+  const habitScore = totalHabits > 0 ? Math.min((completedHabits / totalHabits) * 25, 25) : 0;
 
-  // Activity Quality Score (0-40 points) - ENHANCED with category-based scoring
+  // Activity Quality Score (0-35 points) - category-based scoring
   const today = new Date().toDateString();
   const todayActivities = activities.filter(activity => 
     new Date(activity.startTime).toDateString() === today
@@ -145,29 +144,21 @@ export const calculateProductivityScore = (
   Object.entries(categoryTotals).forEach(([category, duration]) => {
     const weight = getCategoryProductivityWeight(category);
     const timePercentage = totalTimeToday > 0 ? duration / totalTimeToday : 0;
-    categoryScore += timePercentage * weight * 40; // Scale to 40 points max
+    categoryScore += timePercentage * weight * 35; // Scale to 35 points max
   });
 
-  const activityScore = Math.min(categoryScore, 40);
+  const activityScore = Math.min(categoryScore, 35);
 
-  // Focus Time Score (0-10 points) - reduced since category scoring covers this
-  const focusCategories = ['Technical Education', 'Learning & Skills', 'Business'];
-  const focusTime = Object.entries(categoryTotals)
-    .filter(([category]) => focusCategories.includes(category))
-    .reduce((sum, [, duration]) => sum + duration, 0);
-
-  const focusScore = Math.min((focusTime / 3600) * 10, 10); // 1 hour = max points
-
-  // Bonus Points (0-5 points)
-  const pomodoroBonus = Math.min(pomodoroCount * 1, 3);
-  const focusModeBonus = Math.min(focusModeCount * 1, 2);
+  // Bonus Points (0-10 points) - increased from 5
+  const pomodoroBonus = Math.min(pomodoroCount * 2, 6);
+  const focusModeBonus = Math.min(focusModeCount * 2, 4);
   const bonusScore = pomodoroBonus + focusModeBonus;
 
-  // Calculate base score
-  const baseScore = taskScore + habitScore + activityScore + focusScore + bonusScore;
+  // Calculate base score (removed focus score)
+  const baseScore = taskScore + habitScore + activityScore + bonusScore;
 
-  // Streak multiplier (1.0 to 1.1)
-  const streakMultiplier = Math.min(1 + (streak * 0.01), 1.1);
+  // Streak multiplier (1.0 to 1.15)
+  const streakMultiplier = Math.min(1 + (streak * 0.015), 1.15);
 
   // Penalties for poor time distribution
   let penalties = 0;
@@ -177,8 +168,8 @@ export const calculateProductivityScore = (
   
   if (totalTimeToday > 0) {
     const unproductiveRatio = unproductiveTime / totalTimeToday;
-    if (unproductiveRatio > 0.6) penalties += 15; // Too much unproductive time
-    else if (unproductiveRatio > 0.4) penalties += 8;
+    if (unproductiveRatio > 0.6) penalties += 20; // Too much unproductive time
+    else if (unproductiveRatio > 0.4) penalties += 10;
   }
 
   // Final score calculation
@@ -189,7 +180,7 @@ export const calculateProductivityScore = (
     taskScore,
     habitScore,
     activityScore,
-    focusScore,
+    focusScore: 0, // Removed focus scoring
     bonusScore,
     streakMultiplier,
     penalties,
@@ -198,7 +189,7 @@ export const calculateProductivityScore = (
       tasks: { completed: completedTodos, total: totalTodos },
       habits: { completed: completedHabits, total: totalHabits },
       activities: { total: todayActivities.length, totalTime: totalTimeToday },
-      focus: { time: focusTime, activities: focusCategories.length },
+      focus: { time: 0, activities: 0 }, // Removed focus tracking
       bonus: { pomodoro: pomodoroCount, focusMode: focusModeCount }
     }
   };
