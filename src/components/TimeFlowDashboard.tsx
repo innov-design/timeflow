@@ -26,6 +26,7 @@ import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, LineChart, Line, Resp
 import { DataVisualization } from './DataVisualization';
 import { ProductivityScoreCard } from './ProductivityScoreCard';
 import { HabitTracker } from './HabitTracker';
+import { calculateProductivityScore } from '@/utils/productivityScoring';
 
 export interface Activity {
   id: string;
@@ -234,7 +235,7 @@ export const TimeFlowDashboard = () => {
     .reduce((total, activity) => total + activity.duration, 0);
 
   // Calculate productivity score for display
-  const productivityScoreData = require('@/utils/productivityScoring').calculateProductivityScore(
+  const productivityScoreData = calculateProductivityScore(
     activities,
     todos,
     habits,
