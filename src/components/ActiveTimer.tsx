@@ -43,7 +43,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
     if (isRunning) {
       interval = setInterval(() => {
         setElapsedTime(Date.now() - startTime);
-      }, 10);
+      }, 100); // Reduce frequency to prevent white screen flashing
     }
     return () => clearInterval(interval);
   }, [isRunning, startTime]);
@@ -55,12 +55,12 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
     setPastStartTime(defaultStart.toISOString().slice(0, 16));
   }, [pastDuration]);
 
-  // Auto-suggest category based on activity name
+  // Auto-suggest category based on activity name - only if no category is manually selected
   useEffect(() => {
     if (activityName && !selectedCategory) {
       const suggestedCategories = categorizeActivity(activityName);
       if (suggestedCategories.length > 0) {
-        setSelectedCategory(suggestedCategories[0]);
+        setSelectedCategory(suggestedCategories[0]); // Always take the first (and only) category
       }
     }
   }, [activityName, selectedCategory]);
@@ -94,6 +94,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
   const handleAddPastActivity = () => {
     if (!activityName.trim()) return;
     
+    // Use selected category or auto-categorize, but ensure only ONE category
     const finalCategory = selectedCategory || categorizeActivity(activityName)[0] || 'Other';
     
     const startDate = new Date(pastStartTime);
@@ -105,7 +106,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
       duration: pastDuration * 60,
       startTime: startDate,
       endTime: endDate,
-      category: finalCategory,
+      category: finalCategory, // Single category assignment
       isActive: false
     };
     
@@ -120,6 +121,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
   const startTimer = () => {
     if (!activityName.trim()) return;
     
+    // Use selected category or auto-categorize, but ensure only ONE category
     const finalCategory = selectedCategory || categorizeActivity(activityName)[0] || 'Other';
     
     const activity: Omit<Activity, 'id'> = {
@@ -127,7 +129,7 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
       description: activityDescription,
       duration: 0,
       startTime: new Date(),
-      category: finalCategory,
+      category: finalCategory, // Single category assignment
       isActive: true
     };
     
@@ -135,6 +137,11 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
     setIsRunning(true);
     setStartTime(Date.now());
     setElapsedTime(0);
+  };
+
+  const handlePastDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 0;
+    setPastDuration(Math.max(1, value)); // Prevent 0 or negative values
   };
 
   const activeActivity = activities.find(activity => activity.isActive);
@@ -155,6 +162,9 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
             </div>
             <div className="text-white/80">
               {activeActivity.name}
+            </div>
+            <div className="text-xs text-white/60 mt-1">
+              {getCategoryEmoji(activeActivity.category || 'Other')} {activeActivity.category || 'Other'}
             </div>
             <Button 
               onClick={handleStopTimer}
@@ -250,7 +260,8 @@ export const ActiveTimer: React.FC<ActiveTimerProps> = ({ activities, onAddActiv
               type="number"
               placeholder="Duration (minutes)"
               value={pastDuration.toString()}
-              onChange={(e) => setPastDuration(parseInt(e.target.value))}
+              onChange={handlePastDurationChange}
+              min="1"
               className="bg-white/10 border-white/30 text-white placeholder:text-white/60"
             />
             <Button 

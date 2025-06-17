@@ -90,6 +90,21 @@ export interface ProductivityScoreData {
   };
 }
 
+// Category productivity weights for scoring
+export const getCategoryProductivityWeight = (category: string): number => {
+  switch (category) {
+    case 'Technical Education': return 1.0; // Highest productivity
+    case 'Learning & Skills': return 0.9;
+    case 'Business': return 0.85;
+    case 'Fitness': return 0.7;
+    case 'Time with Family': return 0.6;
+    case 'Eating': return 0.5;
+    case 'Browsing': return 0.3;
+    case 'Leisure': return 0.2; // Lowest productivity
+    default: return 0.4;
+  }
+};
+
 export const calculateProductivityScore = (
   activities: any[],
   todos: any[],
@@ -108,43 +123,44 @@ export const calculateProductivityScore = (
   const totalHabits = habits.length;
   const habitScore = totalHabits > 0 ? Math.min((completedHabits / totalHabits) * 20, 20) : 0;
 
-  // Activity Quality Score (0-30 points)
+  // Activity Quality Score (0-40 points) - ENHANCED with category-based scoring
   const today = new Date().toDateString();
   const todayActivities = activities.filter(activity => 
     new Date(activity.startTime).toDateString() === today
   );
 
   const totalTimeToday = todayActivities.reduce((sum, activity) => sum + (activity.duration || 0), 0);
-  const categoryDistribution = todayActivities.reduce((acc, activity) => {
+  
+  // Calculate category-based productivity score
+  let categoryScore = 0;
+  const categoryTotals: Record<string, number> = {};
+  
+  todayActivities.forEach(activity => {
     const category = activity.category || 'Other';
-    acc[category] = (acc[category] || 0) + (activity.duration || 0);
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Calculate weighted activity score
-  let weightedScore = 0;
-  Object.entries(categoryDistribution).forEach(([category, duration]) => {
-    const weight = getCategoryWeight(category);
-    const typedDuration = Number(duration);
-    weightedScore += typedDuration * weight;
+    const duration = activity.duration || 0;
+    categoryTotals[category] = (categoryTotals[category] || 0) + duration;
   });
 
-  const activityScore = totalTimeToday > 0 ? Math.min((weightedScore / totalTimeToday) * 30, 30) : 0;
+  // Calculate weighted score based on time spent in each category
+  Object.entries(categoryTotals).forEach(([category, duration]) => {
+    const weight = getCategoryProductivityWeight(category);
+    const timePercentage = totalTimeToday > 0 ? duration / totalTimeToday : 0;
+    categoryScore += timePercentage * weight * 40; // Scale to 40 points max
+  });
 
-  // Focus Time Score (0-15 points)
-  const focusActivities = ['Work', 'Study', 'Learning', 'Deep Work'];
-  const focusTime = Object.entries(categoryDistribution)
-    .filter(([category]) => focusActivities.includes(category))
-    .reduce((sum, [, duration]) => {
-      const typedDuration = Number(duration);
-      return sum + typedDuration;
-    }, 0);
+  const activityScore = Math.min(categoryScore, 40);
 
-  const focusScore = Math.min((focusTime / 3600) * 15, 15); // 1 hour = max points
+  // Focus Time Score (0-10 points) - reduced since category scoring covers this
+  const focusCategories = ['Technical Education', 'Learning & Skills', 'Business'];
+  const focusTime = Object.entries(categoryTotals)
+    .filter(([category]) => focusCategories.includes(category))
+    .reduce((sum, [, duration]) => sum + duration, 0);
 
-  // Bonus Points (0-10 points)
-  const pomodoroBonus = Math.min(pomodoroCount * 2, 6);
-  const focusModeBonus = Math.min(focusModeCount * 1, 4);
+  const focusScore = Math.min((focusTime / 3600) * 10, 10); // 1 hour = max points
+
+  // Bonus Points (0-5 points)
+  const pomodoroBonus = Math.min(pomodoroCount * 1, 3);
+  const focusModeBonus = Math.min(focusModeCount * 1, 2);
   const bonusScore = pomodoroBonus + focusModeBonus;
 
   // Calculate base score
@@ -153,21 +169,16 @@ export const calculateProductivityScore = (
   // Streak multiplier (1.0 to 1.1)
   const streakMultiplier = Math.min(1 + (streak * 0.01), 1.1);
 
-  // Penalties
+  // Penalties for poor time distribution
   let penalties = 0;
+  const leisureTime = categoryTotals['Leisure'] || 0;
+  const browsingTime = categoryTotals['Browsing'] || 0;
+  const unproductiveTime = leisureTime + browsingTime;
   
-  // Productivity category distribution analysis
-  const productiveTime = (Number(categoryDistribution['Work']) || 0) + 
-                         (Number(categoryDistribution['Study']) || 0) + 
-                         (Number(categoryDistribution['Learning']) || 0);
-  const leisureTime = (Number(categoryDistribution['Entertainment']) || 0) + 
-                     (Number(categoryDistribution['Gaming']) || 0) + 
-                     (Number(categoryDistribution['Social Media']) || 0);
-
-  // Apply penalties for poor time distribution
-  if (leisureTime > 0 && productiveTime > 0) {
-    const leisureRatio = leisureTime / totalTimeToday;
-    if (leisureRatio > 0.5) penalties += 10; // Too much leisure time
+  if (totalTimeToday > 0) {
+    const unproductiveRatio = unproductiveTime / totalTimeToday;
+    if (unproductiveRatio > 0.6) penalties += 15; // Too much unproductive time
+    else if (unproductiveRatio > 0.4) penalties += 8;
   }
 
   // Final score calculation
@@ -187,29 +198,12 @@ export const calculateProductivityScore = (
       tasks: { completed: completedTodos, total: totalTodos },
       habits: { completed: completedHabits, total: totalHabits },
       activities: { total: todayActivities.length, totalTime: totalTimeToday },
-      focus: { time: focusTime, activities: focusActivities.length },
+      focus: { time: focusTime, activities: focusCategories.length },
       bonus: { pomodoro: pomodoroCount, focusMode: focusModeCount }
     }
   };
 };
 
 export const getCategoryWeight = (category: string): number => {
-  switch (category) {
-    case 'Work':
-    case 'Study':
-    case 'Learning':
-      return 1.5;
-    case 'Exercise':
-    case 'Fitness':
-      return 1.2;
-    case 'Leisure':
-    case 'Entertainment':
-    case 'Gaming':
-    case 'Social Media':
-      return 0.8;
-    case 'Personal':
-      return 0.5;
-    default:
-      return 1;
-  }
+  return getCategoryProductivityWeight(category);
 };

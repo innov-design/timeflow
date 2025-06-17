@@ -16,15 +16,19 @@ export const CategoryDistribution: React.FC<CategoryDistributionProps> = ({ acti
     new Date(activity.startTime).toDateString() === today
   );
 
-  // Calculate category totals including multi-category activities
+  // Calculate category totals using SINGLE category per activity
   const categoryTotals = todaysActivities.reduce((acc, activity) => {
-    const categories = categorizeActivity(activity.name);
-    categories.forEach(category => {
-      if (!acc[category]) {
-        acc[category] = 0;
-      }
-      acc[category] += activity.duration;
-    });
+    // Use the activity's assigned category, or categorize if not set
+    let category = activity.category;
+    if (!category) {
+      const categories = categorizeActivity(activity.name);
+      category = categories[0] || 'Other'; // Take first (and only) category
+    }
+    
+    if (!acc[category]) {
+      acc[category] = 0;
+    }
+    acc[category] += activity.duration;
     return acc;
   }, {} as Record<string, number>);
 

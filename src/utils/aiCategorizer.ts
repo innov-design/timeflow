@@ -1,19 +1,19 @@
 
 export const categorizeActivity = (activityName: string): string[] => {
   const activity = activityName.toLowerCase();
-  const categories: string[] = [];
   
-  // Technical Education
+  // Return only the FIRST matching category to avoid multiple selections
+  // Technical Education (highest priority for coding-related activities)
   if (activity.includes('codecademy') || activity.includes('coding course') || 
       activity.includes('coding project') || activity.includes('react') || 
       activity.includes('javascript') || activity.includes('coding') ||
       activity.includes('robotics') || activity.includes('arduino') || 
       activity.includes('programming') || activity.includes('tutorial') ||
       activity.includes('class') || activity.includes('lecture') || activity.includes('workshop')) {
-    categories.push('Technical Education');
+    return ['Technical Education'];
   }
   
-  // Learning & Skills
+  // Learning & Skills (for non-technical learning)
   if (activity.includes('learning') || activity.includes('language') || 
       activity.includes('math') || activity.includes('violin') || 
       activity.includes('piano') || activity.includes('music practice') ||
@@ -27,7 +27,7 @@ export const categorizeActivity = (activityName: string): string[] => {
       activity.includes('french') || activity.includes('german') ||
       activity.includes('chinese') || activity.includes('japanese') ||
       activity.includes('duolingo') || activity.includes('language learning')) {
-    categories.push('Learning & Skills');
+    return ['Learning & Skills'];
   }
   
   // Business
@@ -42,10 +42,10 @@ export const categorizeActivity = (activityName: string): string[] => {
       activity.includes('passive income') || activity.includes('networking') ||
       activity.includes('client work') || activity.includes('proposal') ||
       activity.includes('business plan') || activity.includes('market research')) {
-    categories.push('Business');
+    return ['Business'];
   }
   
-  // Browsing - NEW CATEGORY
+  // Browsing
   if (activity.includes('browsing') || activity.includes('shopping online') || 
       activity.includes('youtube') || activity.includes('watching youtube') ||
       activity.includes('finding travel') || activity.includes('online shopping') ||
@@ -55,18 +55,7 @@ export const categorizeActivity = (activityName: string): string[] => {
       activity.includes('window shopping') || activity.includes('browsing web') ||
       activity.includes('internet browsing') || activity.includes('online research') ||
       activity.includes('looking for') || activity.includes('checking out')) {
-    categories.push('Browsing');
-  }
-  
-  // Leisure
-  if (activity.includes('chilling') || activity.includes('break') ||
-      activity.includes('rest') || activity.includes('relax') ||
-      activity.includes('entertainment') || activity.includes('game') || 
-      activity.includes('tv') || activity.includes('movie') || 
-      activity.includes('music') || activity.includes('social media') ||
-      activity.includes('leisure') || activity.includes('free time') ||
-      activity.includes('cricket') || activity.includes('table tennis')) {
-    categories.push('Leisure');
+    return ['Browsing'];
   }
   
   // Fitness
@@ -80,7 +69,17 @@ export const categorizeActivity = (activityName: string): string[] => {
       activity.includes('bike') || activity.includes('swim') || 
       activity.includes('dance') || activity.includes('hike') || 
       activity.includes('stretch') || activity.includes('cardio')) {
-    categories.push('Fitness');
+    return ['Fitness'];
+  }
+  
+  // Time with Family (before Leisure to prioritize family activities)
+  if (activity.includes('family') || activity.includes('parent') || 
+      activity.includes('child') || activity.includes('sibling') || 
+      activity.includes('mom') || activity.includes('dad') ||
+      activity.includes('mother') || activity.includes('father') || 
+      activity.includes('kids') || activity.includes('relatives') || 
+      activity.includes('together') || activity.includes('visit')) {
+    return ['Time with Family'];
   }
   
   // Eating
@@ -91,32 +90,21 @@ export const categorizeActivity = (activityName: string): string[] => {
       activity.includes('food') || activity.includes('restaurant') ||
       activity.includes('kitchen') || activity.includes('recipe') || 
       activity.includes('grocery')) {
-    categories.push('Eating');
+    return ['Eating'];
   }
   
-  // Time with Family
-  if (activity.includes('family') || activity.includes('parent') || 
-      activity.includes('child') || activity.includes('sibling') || 
-      activity.includes('mom') || activity.includes('dad') ||
-      activity.includes('mother') || activity.includes('father') || 
-      activity.includes('kids') || activity.includes('relatives') || 
-      activity.includes('together') || activity.includes('visit') ||
-      (activity.includes('walking') && activity.includes('family')) ||
-      (activity.includes('tennis') && activity.includes('family')) ||
-      (activity.includes('table tennis') && activity.includes('family')) ||
-      (activity.includes('cricket') && activity.includes('family')) ||
-      (activity.includes('tv') && activity.includes('family')) ||
-      (activity.includes('games') && activity.includes('family')) ||
-      (activity.includes('travel') && activity.includes('family'))) {
-    categories.push('Time with Family');
+  // Leisure (catch-all for entertainment)
+  if (activity.includes('chilling') || activity.includes('break') ||
+      activity.includes('rest') || activity.includes('relax') ||
+      activity.includes('entertainment') || activity.includes('game') || 
+      activity.includes('tv') || activity.includes('movie') || 
+      activity.includes('music') || activity.includes('social media') ||
+      activity.includes('leisure') || activity.includes('free time')) {
+    return ['Leisure'];
   }
   
   // Default category if none match
-  if (categories.length === 0) {
-    categories.push('Other');
-  }
-  
-  return categories;
+  return ['Other'];
 };
 
 export const getCategoryColor = (category: string): string => {

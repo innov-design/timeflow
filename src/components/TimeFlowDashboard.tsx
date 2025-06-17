@@ -233,6 +233,16 @@ export const TimeFlowDashboard = () => {
     })
     .reduce((total, activity) => total + activity.duration, 0);
 
+  // Calculate productivity score for display
+  const productivityScoreData = require('@/utils/productivityScoring').calculateProductivityScore(
+    activities,
+    todos,
+    habits,
+    pomodoroCount,
+    focusModeCount,
+    streak
+  );
+
   const completedGoals = categoryGoals.filter(goal => 
     goal.currentMinutes >= Math.floor(goal.weeklyMinutes / 60)
   ).length;
@@ -254,6 +264,16 @@ export const TimeFlowDashboard = () => {
     ...item,
     hours: Math.round(item.value / 3600 * 10) / 10
   }));
+
+  // Format time for display
+  const formatTimeDisplay = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
 
   return (
     <div className="min-h-screen gradient-bg p-2">
@@ -300,13 +320,16 @@ export const TimeFlowDashboard = () => {
               🔥 {streak} day streak
             </Badge>
             <Badge variant="secondary" className="bg-white/20 text-white text-xs">
-              ⏱️ {Math.floor(totalTimeToday / 60)}h {totalTimeToday % 60}m today
+              ⏱️ {formatTimeDisplay(totalTimeToday)} today
             </Badge>
             <Badge variant="secondary" className="bg-white/20 text-white text-xs">
               📊 {activities.length} total activities
             </Badge>
             <Badge variant="secondary" className="bg-white/20 text-white text-xs">
               🎯 {completedGoals} goals completed
+            </Badge>
+            <Badge variant="secondary" className="bg-white/20 text-white text-xs">
+              📈 {Math.round(productivityScoreData.finalScore)}% productivity
             </Badge>
           </div>
         </Card>
